@@ -1,0 +1,145 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { v4 as uuidv4 } from 'uuid';
+import * as FileSystem from 'expo-file-system';
+import { AppStateProps, AppState, Todo, Habit, Diary, Settings, HabitPeriod } from '../models/types';
+import { todoSchema, habitSchema, diarySchema } from '../models/schemas';
+import { mockTodos } from '../utils/mockTodos';
+
+const initialState: AppStateProps = {
+    todos: mockTodos,
+    habits: [],
+    diaries: [],
+    settings: {
+      soundEnabled: true,
+      habitReminderEnabled: false,
+      defaultDiaryTemplate: 'simple',
+      defaultSort: 'priority',
+      defaultTomatoTime: undefined,
+    },
+  };
+
+export const useTodoStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
+
+      // Todo actions
+      addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status">) => {
+        try {
+          const newTodo: Todo = {
+            ...todo,
+            id: uuidv4(),
+            createdAt: new Date().toISOString(),
+            status: 'pending',
+            priority: todo.priority || 50,
+          };
+          todoSchema.validateSync(newTodo);
+          set((state) => ({ todos: [...state.todos, newTodo] }));
+        } catch (error) {
+          console.error('Validation error:', error);
+        }
+      },
+
+      updateTodo: (id: string, updates: any) => {
+        try {
+          set((state) => ({
+            todos: state.todos.map((todo) =>
+              todo.id === id ? { ...todo, ...updates } : todo
+            ),
+          }));
+        } catch (error) {
+          console.error('Update error:', error);
+        }
+      },
+
+      deleteTodo: (id: string) => {
+        set((state) => ({
+          todos: state.todos.filter((todo) => todo.id !== id),
+        }));
+      },
+
+      reorderTodos: (newOrder: any[]) => {
+        // Validate the new order contains all todos
+        const currentIds = get().todos.map((t) => t.id);
+        const newIds = newOrder.map((t) => t.id);
+        
+        if (currentIds.sort().join() !== newIds.sort().join()) {
+          console.error('Invalid reorder operation');
+          return;
+        }
+
+        set({ todos: newOrder });
+      },
+
+      // Habit actions
+      addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "completedCount" | "periodEndDate">) => {
+        try {
+          const newHabit: Habit = {
+            ...habit,
+            id: uuidv4(),
+            createdAt: new Date().toISOString(),
+            status: 'pending',
+            priority: habit.priority || 50,
+            completedCount: 0,  // Initialize to 0
+            periodEndDate: calculatePeriodEndDate(habit.period),
+          };
+          habitSchema.validateSync(newHabit);
+          set((state) => ({ habits: [...state.habits, newHabit] }));
+        } catch (error) {
+          console.error('Validation error:', error);
+        }
+      },
+
+      // Diary actions
+      addDiary: (diary: Diary) => {
+        try {
+          diarySchema.validateSync(diary);
+          set((state) => ({ diaries: [...state.diaries, diary] }));
+        } catch (error) {
+          console.error('Validation error:', error);
+        }
+      },
+
+      // Settings actions
+      updateSettings: (updates: Partial<Settings>) => {
+        set((state) => ({
+          settings: { ...state.settings, ...updates },
+        }));
+      },
+    }),
+    {
+      name: 'todo-app-storage',
+      partialize: (state) => ({
+        todos: state.todos,
+        habits: state.habits,
+        diaries: state.diaries,
+        settings: state.settings,
+      }),
+    }
+  )
+);
+
+// Helper function to calculate period end date
+function calculatePeriodEndDate(period: HabitPeriod): string {
+  const now = new Date();
+  switch (period) {
+    case 'daily':
+      now.setHours(23, 59, 59, 999);
+      break;
+    case 'weekly':
+      now.setDate(now.getDate() + (7 - now.getDay())); // Next Sunday
+      now.setHours(23, 59, 59, 999);
+      break;
+    case 'monthly':
+      now.setMonth(now.getMonth() + 1);
+      now.setDate(0); // Last day of current month
+      now.setHours(23, 59, 59, 999);
+      break;
+    case 'custom':
+      now.setDate(now.getDate() + 1); // Default to next day
+      now.setHours(23, 59, 59, 999);
+      break;
+  }
+  return now.toISOString();
+}

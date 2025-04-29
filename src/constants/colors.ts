@@ -16,3 +16,11 @@ export const Colors = {
   },
   divider: '#E0E0E0',      // 分隔线
 };
+
+export const generateRandomLightColor = () => {
+  // Generate light colors by keeping high values for RGB
+  const r = 200 + Math.floor(Math.random() * 55);
+  const g = 200 + Math.floor(Math.random() * 55);
+  const b = 200 + Math.floor(Math.random() * 55);
+  return `rgb(${r}, ${g}, ${b})`;
+};

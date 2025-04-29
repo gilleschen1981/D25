@@ -4,7 +4,7 @@ import { Pressable, useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import {Colors} from '../../constants/colors';
+import {Colors} from '../../src/constants/colors';
 
 /**
  * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
