@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function EditTodoModal() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const { todos, addTodo, updateTodo } = useTodoStore();
+  const { todos, addTodo, updateTodo, editingTodoId } = useTodoStore();
 
   // Get the todo if editing
-  const existingTodo = params.id ? todos.find(t => t.id === params.id) : null;
+  const existingTodo = editingTodoId ? todos.find(t => t.id === editingTodoId) : null;
 
   // Form state
   const [content, setContent] = useState(existingTodo?.content || '');
@@ -18,7 +17,6 @@ export default function EditTodoModal() {
   const [dueDate, setDueDate] = useState(existingTodo?.dueDate || '');
   const [hasTomatoTime, setHasTomatoTime] = useState(!!existingTodo?.tomatoTime);
   const [tomatoTime, setTomatoTime] = useState(existingTodo?.tomatoTime?.toString() || '5');
-  const [backgroundColor] = useState(params.backgroundColor || '#ffffff');
 
   const handleSave = () => {
     if (!content.trim()) {
@@ -30,14 +28,13 @@ export default function EditTodoModal() {
       content,
       dueDate: hasDueDate ? dueDate : undefined,
       tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
-      backgroundColor,
     };
 
-    // if (existingTodo) {
-    //   updateTodo(existingTodo.id, todoData);
-    // } else {
-    //   addTodo(todoData);
-    // }
+    if (existingTodo) {
+      updateTodo(existingTodo.id, todoData);
+    } else {
+      addTodo(todoData);
+    }
 
     router.back();
   };

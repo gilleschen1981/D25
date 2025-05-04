@@ -5,6 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import { AppStateProps, AppState, Todo, Habit, Diary, Settings, HabitPeriod } from '../models/types';
 import { todoSchema, habitSchema, diarySchema } from '../models/schemas';
 import { mockTodos } from '../utils/mockTodos';
+import { generateRandomLightColor } from '../constants/colors';
 
 const initialState: AppStateProps = {
     todos: mockTodos,
@@ -17,6 +18,7 @@ const initialState: AppStateProps = {
       defaultSort: 'priority',
       defaultTomatoTime: undefined,
     },
+    editingTodoId: null,
   };
 
 export const useTodoStore = create<AppState>()(
@@ -25,14 +27,15 @@ export const useTodoStore = create<AppState>()(
       ...initialState,
 
       // Todo actions
-      addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status">) => {
+      addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status" | "backgroundColor" | "priority">) => {
         try {
           const newTodo: Todo = {
             ...todo,
             id: uuidv4(),
             createdAt: new Date().toISOString(),
             status: 'pending',
-            priority: todo.priority || 50,
+            priority: 50,
+            backgroundColor: generateRandomLightColor()
           };
           todoSchema.validateSync(newTodo);
           set((state) => ({ todos: [...state.todos, newTodo] }));

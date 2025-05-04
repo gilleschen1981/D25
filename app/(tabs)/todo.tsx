@@ -32,13 +32,8 @@ export default function TodoScreen() {
 
   const handleLongPress = (todo: Todo) => {
     setLongPressedTodo(todo);
-    router.push({
-      pathname: '/modal/edit-todo',
-      params: { 
-        id: todo.id,
-        backgroundColor: todo.backgroundColor 
-      }
-    });
+    useTodoStore.setState({ editingTodoId: todo.id });
+    router.push('/modal/edit-todo');
   };
 
   const handleStartTodo = (todo: Todo) => {
@@ -67,7 +62,10 @@ export default function TodoScreen() {
             onLongPress={() => handleLongPress(item)}
           >
             <View style={styles.todoContent}>
-              <Text style={styles.todoTitle}>{item.content}</Text>
+              <Text style={[
+                styles.todoTitle,
+                item.status === 'done' && styles.doneText
+              ]}>{item.content}</Text>
               {item.dueDate && (
                 <Text style={styles.todoDueDate}>
                   {new Date(item.dueDate).toLocaleDateString()}
@@ -75,8 +73,12 @@ export default function TodoScreen() {
               )}
             </View>
             <TouchableOpacity 
-              style={styles.startButton}
-              onPress={() => handleStartTodo(item)}
+              style={[
+                styles.startButton,
+                item.status === 'done' && styles.disabledButton
+              ]}
+              onPress={() => item.status !== 'done' && handleStartTodo(item)}
+              disabled={item.status === 'done'}
             >
               <Text style={styles.startButtonText}>开始</Text>
             </TouchableOpacity>
@@ -130,5 +132,12 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  doneText: {
+    textDecorationLine: 'line-through',
+    color: '#999',
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
   },
 });

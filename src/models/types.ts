@@ -44,13 +44,14 @@ export interface AppStateProps {
   habits: Habit[];
   diaries: Diary[];
   settings: Settings;
+  editingTodoId: string | null;
 }
 
 
 
   // Action methods
 export interface AppState extends AppStateProps {
-  addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status">) => void;
+  addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status" | "backgroundColor" | "priority">) => void;
   updateTodo: (id: string, updates: Partial<Todo>) => void;
   deleteTodo: (id: string) => void;
   reorderTodos: (newOrder: Todo[]) => void;
@@ -80,4 +81,3 @@ export interface LocaleConfig {
     };
   };
 }
-
