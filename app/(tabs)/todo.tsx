@@ -1,15 +1,128 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { Todo } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 
+function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveSwipeable }: {
+  item: Todo;
+  onLongPress: (todo: Todo) => void;
+  onStartPress: (todo: Todo) => void;
+  activeSwipeable: Swipeable | null;
+  setActiveSwipeable: (swipeable: Swipeable | null) => void;
+}) {
+  const swipeableRef = useRef<Swipeable>(null);
+  const { deleteTodo } = useTodoStore();
+
+  const handleSwipeableOpen = () => {
+    if (activeSwipeable && activeSwipeable !== swipeableRef.current) {
+      activeSwipeable.close();
+    }
+    setActiveSwipeable(swipeableRef.current);
+  };
+
+  const renderRightActions = () => (
+    <TouchableOpacity
+      style={styles.deleteButton}
+      onPress={() => {
+        console.log('Delete button pressed for item:', item.id);
+        const showDeleteConfirmation = () => {
+          if (Platform.OS === 'web') {
+            if (window.confirm(`确定要删除"${item.content}"吗？`)) {
+              confirmDelete();
+            } else {
+              cancelDelete();
+            }
+          } else {
+            Alert.alert(
+              '删除待办事项',
+              `确定要删除"${item.content}"吗？`,
+              [
+                {
+                  text: '取消',
+                  style: 'cancel',
+                  onPress: cancelDelete
+                },
+                {
+                  text: '删除',
+                  style: 'destructive',
+                  onPress: confirmDelete
+                }
+              ]
+            );
+          }
+        };
+
+        const confirmDelete = () => {
+          console.log('Deleting item:', item.id);
+          deleteTodo(item.id);
+          swipeableRef.current?.close();
+        };
+
+        const cancelDelete = () => {
+          console.log('Delete cancelled');
+          swipeableRef.current?.close();
+        };
+
+        showDeleteConfirmation();
+      }}
+    >
+      <MaterialIcons name="delete" size={24} color="white" />
+    </TouchableOpacity>
+  );
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      rightThreshold={40}
+      onSwipeableOpen={handleSwipeableOpen}
+      onSwipeableClose={() => {
+        if (activeSwipeable === swipeableRef.current) {
+          setActiveSwipeable(null);
+        }
+      }}
+      enabled={item.status === 'pending'}
+    >
+      <TouchableOpacity 
+        style={[styles.todoItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
+        onLongPress={() => onLongPress(item)}
+      >
+        <View style={styles.todoContent}>
+          <Text style={[
+            styles.todoTitle,
+            item.status === 'done' && styles.doneText
+          ]}>{item.content}</Text>
+          {item.dueDate && (
+            <Text style={styles.todoDueDate}>
+              {new Date(item.dueDate).toLocaleDateString()}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity 
+          style={[
+            styles.startButton,
+            item.status === 'done' && styles.disabledButton
+          ]}
+          onPress={() => item.status !== 'done' && onStartPress(item)}
+          disabled={item.status === 'done'}
+        >
+          <Text style={styles.startButtonText}>开始</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Swipeable>
+  );
+}
+
 export default function TodoScreen() {
   const router = useRouter();
-  const { todos, updateTodo } = useTodoStore();
+  const { todos, updateTodo, deleteTodo } = useTodoStore();
+  const [_, forceUpdate] = useState({});
   const [longPressedTodo, setLongPressedTodo] = useState<Todo | null>(null);
+  const [activeSwipeable, setActiveSwipeable] = useState<Swipeable | null>(null);
 
   // Sort todos according to requirements
   const sortedTodos = [...todos].sort((a, b) => {
@@ -57,32 +170,13 @@ export default function TodoScreen() {
         data={sortedTodos}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={[styles.todoItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
-            onLongPress={() => handleLongPress(item)}
-          >
-            <View style={styles.todoContent}>
-              <Text style={[
-                styles.todoTitle,
-                item.status === 'done' && styles.doneText
-              ]}>{item.content}</Text>
-              {item.dueDate && (
-                <Text style={styles.todoDueDate}>
-                  {new Date(item.dueDate).toLocaleDateString()}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity 
-              style={[
-                styles.startButton,
-                item.status === 'done' && styles.disabledButton
-              ]}
-              onPress={() => item.status !== 'done' && handleStartTodo(item)}
-              disabled={item.status === 'done'}
-            >
-              <Text style={styles.startButtonText}>开始</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
+          <TodoItem 
+            item={item}
+            onLongPress={handleLongPress}
+            onStartPress={handleStartTodo}
+            activeSwipeable={activeSwipeable}
+            setActiveSwipeable={setActiveSwipeable}
+          />
         )}
         contentContainerStyle={styles.listContainer}
       />
@@ -139,5 +233,14 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#cccccc',
+  },
+  deleteButton: {
+    backgroundColor: '#F44336',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+    borderRadius: 8,
+    marginBottom: 12,
   },
 });
