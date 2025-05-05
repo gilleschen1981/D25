@@ -6,6 +6,7 @@ import { useTodoStore } from '../../src/store/useTodoStore';
 import { Todo } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
+import { Strings } from '../../src/constants/strings';
 
 function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveSwipeable }: {
   item: Todo;
@@ -92,29 +93,40 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
         style={[styles.todoItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
           onLongPress={() => onLongPress(item)}
         >
-          <View style={styles.todoContent}>
+          <View style={styles.contentContainer}>
             <Text style={[
               styles.todoTitle,
               item.status === 'done' && styles.doneText
             ]}>{item.content}</Text>
-            {item.dueDate && (
-              <Text style={styles.todoDueDate}>
-                {new Date(item.dueDate).toLocaleDateString()}
-              </Text>
-            )}
           </View>
-      <TouchableOpacity 
-        style={[
-          styles.startButton,
-          item.status === 'done' && styles.disabledButton
-        ]}
-        onPress={() => item.status !== 'done' && onStartPress(item)}
-        disabled={item.status === 'done'}
-      >
-        <Text style={styles.startButtonText}>开始</Text>
-      </TouchableOpacity>
-      </TouchableOpacity>
-    </Swipeable>
+          
+          <View style={styles.dueDateContainer}>
+            <Text style={styles.dueDateLabel}>截至</Text>
+            <Text style={styles.dueDateValue}>
+              {item.dueDate ? 
+                `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${Strings.common.minutes}` : 
+                '-'}
+            </Text>
+          </View>
+
+          <View style={styles.tomatoTimeContainer}>
+            <Text style={styles.tomatoTimeText}>
+              {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
+            </Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={[
+              styles.startButton,
+              item.status === 'done' && styles.disabledButton
+            ]}
+            onPress={() => item.status !== 'done' && onStartPress(item)}
+            disabled={item.status === 'done'}
+          >
+            <Text style={styles.startButtonText}>开始</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Swipeable>
   );
 }
 
@@ -211,15 +223,33 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  todoContent: {
+  contentContainer: {
     flex: 1,
+    marginRight: 16,
+  },
+  dueDateContainer: {
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  dueDateLabel: {
+    fontSize: 10,
+    color: '#666',
+  },
+  dueDateValue: {
+    fontSize: 12,
+    color: '#666',
   },
   todoTitle: {
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 4,
   },
-  todoDueDate: {
+  tomatoTimeContainer: {
+    width: 60,
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  tomatoTimeText: {
     fontSize: 12,
     color: '#666',
   },
