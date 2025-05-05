@@ -165,7 +165,13 @@ export default function TodoScreen() {
   };
 
   const handleStartTodo = (todo: Todo) => {
-    updateTodo(todo.id, { status: 'done' });
+    if (todo.tomatoTime) {
+      useTodoStore.setState({ editingTodoId: todo.id });
+      router.push('/modal/timer');
+      updateTodo(todo.id, { status: 'inProgress' });
+    } else {
+      updateTodo(todo.id, { status: 'done' });
+    }
   };
 
   return (
