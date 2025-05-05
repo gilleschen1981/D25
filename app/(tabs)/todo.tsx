@@ -75,43 +75,44 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
   );
 
   return (
-    <Swipeable
-      ref={swipeableRef}
-      renderRightActions={renderRightActions}
-      rightThreshold={40}
-      onSwipeableOpen={handleSwipeableOpen}
-      onSwipeableClose={() => {
-        if (activeSwipeable === swipeableRef.current) {
-          setActiveSwipeable(null);
-        }
-      }}
-      enabled={item.status === 'pending'}
-    >
-      <TouchableOpacity 
-        style={[styles.todoItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
-        onLongPress={() => onLongPress(item)}
+      <Swipeable
+        ref={swipeableRef}
+        renderRightActions={renderRightActions}
+        rightThreshold={40}
+        friction={10}
+        onSwipeableOpen={handleSwipeableOpen}
+        onSwipeableClose={() => {
+          if (activeSwipeable === swipeableRef.current) {
+            setActiveSwipeable(null);
+          }
+        }}
+        enabled={item.status === 'pending'}
       >
-        <View style={styles.todoContent}>
-          <Text style={[
-            styles.todoTitle,
-            item.status === 'done' && styles.doneText
-          ]}>{item.content}</Text>
-          {item.dueDate && (
-            <Text style={styles.todoDueDate}>
-              {new Date(item.dueDate).toLocaleDateString()}
-            </Text>
-          )}
-        </View>
         <TouchableOpacity 
-          style={[
-            styles.startButton,
-            item.status === 'done' && styles.disabledButton
-          ]}
-          onPress={() => item.status !== 'done' && onStartPress(item)}
-          disabled={item.status === 'done'}
+        style={[styles.todoItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
+          onLongPress={() => onLongPress(item)}
         >
-          <Text style={styles.startButtonText}>开始</Text>
-        </TouchableOpacity>
+          <View style={styles.todoContent}>
+            <Text style={[
+              styles.todoTitle,
+              item.status === 'done' && styles.doneText
+            ]}>{item.content}</Text>
+            {item.dueDate && (
+              <Text style={styles.todoDueDate}>
+                {new Date(item.dueDate).toLocaleDateString()}
+              </Text>
+            )}
+          </View>
+      <TouchableOpacity 
+        style={[
+          styles.startButton,
+          item.status === 'done' && styles.disabledButton
+        ]}
+        onPress={() => item.status !== 'done' && onStartPress(item)}
+        disabled={item.status === 'done'}
+      >
+        <Text style={styles.startButtonText}>开始</Text>
+      </TouchableOpacity>
       </TouchableOpacity>
     </Swipeable>
   );
@@ -129,6 +130,8 @@ export default function TodoScreen() {
     // First by priority (descending)
     if (a.priority !== b.priority) return b.priority - a.priority;
     // Then by due date (ascending)
+    if (a.dueDate && !b.dueDate) return 1;
+    if (!a.dueDate && b.dueDate) return -1;
     if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     // Finally by creation date (ascending)
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -238,8 +241,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F44336',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
-    height: '100%',
+    width: 40,
+    height: '85%',
     borderRadius: 8,
     marginBottom: 12,
   },
