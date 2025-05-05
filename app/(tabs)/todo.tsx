@@ -162,8 +162,11 @@ export default function TodoScreen() {
         options={{ 
           title: '待办事项',
           headerRight: () => (
-            <TouchableOpacity onPress={handleAddTodo}>
-              <MaterialIcons name="add" size={24} color="black" />
+            <TouchableOpacity 
+              onPress={handleAddTodo}
+              style={{ paddingRight: 16 }}
+            >
+              <MaterialIcons name="add" size={28} color="black" />
             </TouchableOpacity>
           )
         }} 
