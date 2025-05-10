@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 import { AppStateProps, AppState, Todo, Habit, Diary, Settings, HabitPeriod } from '../models/types';
 import { todoSchema, habitSchema, diarySchema } from '../models/schemas';
 import { mockTodos } from '../utils/mockTodos';
@@ -109,6 +110,43 @@ export const useTodoStore = create<AppState>()(
         set((state) => ({
           settings: { ...state.settings, ...updates },
         }));
+      },
+
+      // History functions
+      daychange: async () => {
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        const doneTodos = get().todos.filter(todo => todo.status === 'done');
+        
+        if (doneTodos.length === 0) return;
+
+        if (Platform.OS === 'web') {
+          // Web implementation using localStorage
+          try {
+            localStorage.setItem(`todo-history-${dateStr}`, JSON.stringify(doneTodos));
+            set((state) => ({
+              todos: state.todos.filter(todo => todo.status !== 'done')
+            }));
+          } catch (error) {
+            console.error('Error saving history to localStorage:', error);
+          }
+        } else {
+          // Native implementation using expo-file-system
+          try {
+            const historyDir = `${FileSystem.documentDirectory}history`;
+            const dirInfo = await FileSystem.getInfoAsync(historyDir);
+            if (!dirInfo.exists) {
+              await FileSystem.makeDirectoryAsync(historyDir, { intermediates: true });
+            }
+            const filePath = `${historyDir}/${dateStr}.json`;
+            await FileSystem.writeAsStringAsync(filePath, JSON.stringify(doneTodos));
+            set((state) => ({
+              todos: state.todos.filter(todo => todo.status !== 'done')
+            }));
+          } catch (error) {
+            console.error('Error in daychange:', error);
+          }
+        }
       },
     }),
     {

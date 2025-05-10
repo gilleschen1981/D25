@@ -58,6 +58,7 @@ export interface AppState extends AppStateProps {
   addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "completedCount" | "periodEndDate">) => void;
   addDiary: (diary: Diary) => void;
   updateSettings: (updates: Partial<Settings>) => void;
+  daychange: () => Promise<void>;
 }
 
 // Locale configuration

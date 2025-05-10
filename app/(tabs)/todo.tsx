@@ -80,7 +80,7 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
         ref={swipeableRef}
         renderRightActions={renderRightActions}
         rightThreshold={40}
-        friction={10}
+        friction={5}
         onSwipeableOpen={handleSwipeableOpen}
         onSwipeableClose={() => {
           if (activeSwipeable === swipeableRef.current) {
@@ -140,10 +140,10 @@ export default function TodoScreen() {
   // Sort todos according to requirements
   const sortedTodos = [...todos].sort((a, b) => {
     // First by priority (descending)
-    if (a.priority !== b.priority) return b.priority - a.priority;
+    if (a.priority !== b.priority) return a.priority - b.priority;
     // Then by due date (ascending)
-    if (a.dueDate && !b.dueDate) return 1;
-    if (!a.dueDate && b.dueDate) return -1;
+    if (a.dueDate && !b.dueDate) return -1;
+    if (!a.dueDate && b.dueDate) return 1;
     if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     // Finally by creation date (ascending)
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -180,12 +180,20 @@ export default function TodoScreen() {
         options={{ 
           title: '待办事项',
           headerRight: () => (
-            <TouchableOpacity 
-              onPress={handleAddTodo}
-              style={{ paddingRight: 16 }}
-            >
-              <MaterialIcons name="add" size={28} color="black" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity 
+                onPress={() => useTodoStore.getState().daychange()}
+                style={{ paddingRight: 16 }}
+              >
+                <MaterialIcons name="refresh" size={28} color="black" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleAddTodo}
+                style={{ paddingRight: 16 }}
+              >
+                <MaterialIcons name="add" size={28} color="black" />
+              </TouchableOpacity>
+            </View>
           )
         }} 
       />

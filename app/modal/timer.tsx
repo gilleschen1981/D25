@@ -6,48 +6,72 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 export default function TimerScreen() {
   const router = useRouter();
-  const { todos, updateTodo, editingTodoId } = useTodoStore();
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [isActive, setIsActive] = useState(true);
-
+  const { todos, updateTodo, editingTodoId,  } = useTodoStore();
   // Get the todo item
   const todo = todos.find(t => t.id === editingTodoId);
-  
+  const initialSeconds = todo?.tomatoTime ? todo.tomatoTime * 60 : 0;
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+  const [isActive, setIsActive] = useState(true);
+  console.log("Initial timer state:", { initialSeconds, todo: todo?.tomatoTime });
   // Initialize timer
   useEffect(() => {
     if (todo?.tomatoTime) {
-      setSecondsLeft(todo.tomatoTime * 60);
+      const initialSeconds = todo.tomatoTime * 60;
+      setSecondsLeft(initialSeconds);
+      setIsActive(true);
+      console.log("Timer initialized with: ", initialSeconds);
     }
   }, [todo]);
 
-  // Countdown logic
+  // Countdown interval management
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (isActive && secondsLeft > 0) {
-      interval = setInterval(() => {
-        setSecondsLeft(prev => prev - 1);
-      }, 1000);
-    } else if (secondsLeft === 0 && isActive) {
-      // Timer completed
-      handleComplete();
+    if (isActive) {
+      console.log("Timer active, secondsLeft:", secondsLeft);
+      if (secondsLeft > 0) {
+        interval = setInterval(() => {
+          setSecondsLeft(prev => {
+            const newSeconds = prev - 1;
+            console.log("Countdown tick:", newSeconds);
+            return newSeconds;
+          });
+        }, 1000);
+      } else {
+        handleComplete();
+      }
     }
 
-    return () => clearInterval(interval);
-  }, [secondsLeft, isActive]);
+    return () => {
+      if (interval) {
+        console.log("Clearing interval");
+        clearInterval(interval);
+      }
+    };
+  }, [isActive]);
+
+  // Handle timer completion when seconds reach 0
+  useEffect(() => {
+    if (secondsLeft === 0 && isActive) {
+      handleComplete();
+    }
+  }, [secondsLeft]);
 
   const handleComplete = () => {
     if (todo) {
       updateTodo(todo.id, { status: 'done' });
       Alert.alert('任务完成', `${todo.content} 已经完成`);
     }
+    useTodoStore.setState({ editingTodoId: null});
     router.back();
+    console.log("complete")
   };
 
   const handleRestart = () => {
     if (todo?.tomatoTime) {
       setSecondsLeft(todo.tomatoTime * 60);
       setIsActive(true);
+      console.log("restart")
     }
   };
 
@@ -55,7 +79,9 @@ export default function TimerScreen() {
     if (todo) {
       updateTodo(todo.id, { status: 'pending' });
     }
+    useTodoStore.setState({ editingTodoId: null});
     router.back();
+    console.log("exit")
   };
 
   const formatTime = (seconds: number) => {
@@ -78,7 +104,7 @@ export default function TimerScreen() {
           onPress={handleComplete}
         >
           <MaterialIcons name="stop" size={24} color="white" />
-          <Text style={styles.buttonText}>结束计时</Text>
+          <Text style={styles.buttonText}>完成计时</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
