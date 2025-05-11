@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, Button, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,6 +16,67 @@ export default function EditTodoModal() {
   const [content, setContent] = useState(existingTodo?.content || '');
   const [hasDueDate, setHasDueDate] = useState(!!existingTodo?.dueDate);
   const [dueDate, setDueDate] = useState(existingTodo?.dueDate || '');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const setToday = () => {
+    const now = new Date();
+    const nextHour = new Date(now);
+    nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+    
+    const localDate = nextHour.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '-');
+    const localTime = nextHour.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const dateStr = `${localDate}T${localTime}`;
+    setDueDate(dateStr);
+    setSelectedDate(new Date(dateStr));
+  };
+
+  const setThisWeek = () => {
+    const now = new Date();
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() + (7 - now.getDay()));
+    sunday.setHours(now.getHours() + 1, 0, 0, 0);
+    
+    const localDate = sunday.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '-');
+    const localTime = sunday.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const dateStr = `${localDate}T${localTime}`;
+    setDueDate(dateStr);
+    setSelectedDate(new Date(dateStr));
+  };
+
+  const handleDateChange = (event: any, date?: Date) => {
+    if (date) {
+      // Convert to local datetime string
+      const localDate = date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '-');
+      const localTime = date.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      const dateStr = `${localDate}T${localTime}`;
+      setSelectedDate(date);
+      setDueDate(dateStr);
+    }
+  };
   const [hasTomatoTime, setHasTomatoTime] = useState(!!existingTodo?.tomatoTime);
   const [tomatoTime, setTomatoTime] = useState(existingTodo?.tomatoTime?.toString() || '5');
 
@@ -22,6 +84,15 @@ export default function EditTodoModal() {
     if (!content.trim()) {
       Alert.alert('错误', '内容不能为空');
       return;
+    }
+
+    if (hasDueDate && dueDate) {
+      const now = new Date();
+      const selected = new Date(dueDate);
+      if (selected <= now) {
+        Alert.alert('错误', '截止时间必须晚于当前时间');
+        return;
+      }
     }
 
     const todoData = {
@@ -65,13 +136,39 @@ export default function EditTodoModal() {
           />
         </View>
         {hasDueDate && (
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={dueDate}
-            onChangeText={setDueDate}
-            keyboardType="numbers-and-punctuation"
-          />
+          <View>
+            <View style={styles.dateOptionRow}>
+              <Button title="今日" onPress={setToday} />
+              <Button title="本周" onPress={setThisWeek} />
+            </View>
+            {hasDueDate && (
+              Platform.OS === 'web' ? (
+                <input
+                  type="datetime-local"
+                  value={dueDate}
+                  onChange={(e) => {
+                    setDueDate(e.target.value);
+                  }}
+                  style={{
+                    fontSize: 16,
+                    padding: 10,
+                    borderWidth: 1,
+                    borderColor: '#ddd',
+                    borderRadius: 5,
+                    marginTop: 10,
+                    width: '100%'
+                  }}
+                />
+              ) : (
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="datetime"
+                  display="default"
+                  onChange={handleDateChange}
+                />
+              )
+            )}
+          </View>
         )}
       </View>
 
@@ -141,6 +238,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 5,
+    marginTop: 10,
+  },
+  dateOptionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   buttonRow: {
     flexDirection: 'row',
