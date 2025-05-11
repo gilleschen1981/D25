@@ -5,12 +5,12 @@ import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 import { AppStateProps, AppState, Todo, Habit, Diary, Settings, HabitPeriod } from '../models/types';
 import { todoSchema, habitSchema, diarySchema } from '../models/schemas';
-import { mockTodos } from '../utils/mockTodos';
+import { mockHabits } from '../utils/mockHabits';
 import { generateRandomLightColor } from '../constants/colors';
 
 const initialState: AppStateProps = {
-    todos: mockTodos,
-    habits: [],
+    todos: [],
+    habits: JSON.parse(JSON.stringify(mockHabits)),
     diaries: [],
     settings: {
       soundEnabled: true,
@@ -150,13 +150,21 @@ export const useTodoStore = create<AppState>()(
       },
     }),
     {
-      name: 'todo-app-storage',
-      partialize: (state) => ({
-        todos: state.todos,
-        habits: state.habits,
-        diaries: state.diaries,
-        settings: state.settings,
-      }),
+      name: 'todo-app-storage-v2', // Changed storage name
+      partialize: (state) => {
+        console.log('Persisting state:', state);
+        return {
+          todos: state.todos,
+          habits: state.habits,
+          diaries: state.diaries,
+          settings: state.settings,
+        };
+      },
+      onRehydrateStorage: () => {
+        return (state) => {
+          console.log('Rehydrated state:', state);
+        };
+      },
     }
   )
 );
