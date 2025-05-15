@@ -79,6 +79,8 @@ export default function EditTodoModal() {
   };
   const [hasTomatoTime, setHasTomatoTime] = useState(!!existingTodo?.tomatoTime);
   const [tomatoTime, setTomatoTime] = useState(existingTodo?.tomatoTime?.toString() || '5');
+  const [hasTargetCount, setHasTargetCount] = useState(!!existingTodo?.targetCount);
+  const [targetCount, setTargetCount] = useState(existingTodo?.targetCount?.toString() || '1');
 
   const handleSave = () => {
     if (!content.trim()) {
@@ -95,10 +97,16 @@ export default function EditTodoModal() {
       }
     }
 
+    if (hasTargetCount && (!targetCount || parseInt(targetCount) < 2)) {
+      Alert.alert('错误', '重复次数必须大于1');
+      return;
+    }
+
     const todoData = {
       content,
       dueDate: hasDueDate ? dueDate : undefined,
       tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
+      targetCount: hasTargetCount ? parseInt(targetCount) : undefined,
     };
 
     if (existingTodo) {
@@ -188,6 +196,29 @@ export default function EditTodoModal() {
             onChangeText={(text) => {
               if (/^\d*$/.test(text)) {
                 setTomatoTime(text);
+              }
+            }}
+            keyboardType="numeric"
+          />
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>设置重复次数</Text>
+          <Switch
+            value={hasTargetCount}
+            onValueChange={setHasTargetCount}
+          />
+        </View>
+        {hasTargetCount && (
+          <TextInput
+            style={styles.input}
+            placeholder="重复次数 (≥2)"
+            value={targetCount}
+            onChangeText={(text) => {
+              if (/^\d*$/.test(text)) {
+                setTargetCount(text);
               }
             }}
             keyboardType="numeric"

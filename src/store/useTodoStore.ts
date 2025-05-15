@@ -36,7 +36,9 @@ export const useTodoStore = create<AppState>()(
             createdAt: new Date().toISOString(),
             status: 'pending',
             priority: 50,
-            backgroundColor: generateRandomLightColor()
+            backgroundColor: generateRandomLightColor(),
+            targetCount: todo.targetCount || 1,
+            completedCount: todo.completedCount || 0
           };
           todoSchema.validateSync(newTodo);
           set((state) => ({ todos: [...state.todos, newTodo] }));
@@ -77,7 +79,7 @@ export const useTodoStore = create<AppState>()(
       },
 
       // Habit actions
-      addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "completedCount" | "periodEndDate">) => {
+      addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "periodEndDate">) => {
         try {
           const newHabit: Habit = {
             ...habit,
@@ -85,7 +87,6 @@ export const useTodoStore = create<AppState>()(
             createdAt: new Date().toISOString(),
             status: 'pending',
             priority: habit.priority || 50,
-            completedCount: 0,  // Initialize to 0
             periodEndDate: calculatePeriodEndDate(habit.period),
           };
           habitSchema.validateSync(newHabit);

@@ -12,12 +12,12 @@ export interface Todo {
   priority: number; // 1-100
   createdAt: string; // ISO8601 format, readonly
   backgroundColor: string;
+  targetCount?: number; // ≥1
+  completedCount?: number;
 }
 
 export interface Habit extends Todo {
   period: HabitPeriod;
-  targetCount: number; // ≥1
-  completedCount: number;
   periodEndDate: string; // ISO8601 format
 }
 

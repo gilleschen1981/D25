@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
+import { Todo } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function TimerScreen() {
@@ -59,8 +60,17 @@ export default function TimerScreen() {
 
   const handleComplete = () => {
     if (todo) {
-      updateTodo(todo.id, { status: 'done' });
-      Alert.alert('任务完成', `${todo.content} 已经完成`);
+      const newCompletedCount = (todo.completedCount || 0) + 1;
+      const updates: Partial<Todo> = { 
+        completedCount: newCompletedCount 
+      };
+      if (todo.targetCount && newCompletedCount >= todo.targetCount) {
+        updates.status = 'done';
+        Alert.alert('任务完成', `${todo.content} 已经完成`);
+      } else {
+        Alert.alert('任务进度', `已完成 ${newCompletedCount}/${todo.targetCount || 1} 次`);
+      }
+      updateTodo(todo.id, updates);
     }
     useTodoStore.setState({ editingTodoId: null});
     router.back();

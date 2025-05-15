@@ -114,6 +114,14 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
               {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
             </Text>
           </View>
+
+          <View style={styles.countContainer}>
+            {item.targetCount && item.targetCount > 1 ? (
+              <Text style={styles.countText}>
+                {item.completedCount || 0}/{item.targetCount}
+              </Text>
+            ) : null}
+          </View>
           
           <TouchableOpacity 
             style={[
@@ -170,7 +178,14 @@ export default function TodoScreen() {
       router.push('/modal/timer');
       updateTodo(todo.id, { status: 'inProgress' });
     } else {
-      updateTodo(todo.id, { status: 'done' });
+      const newCompletedCount = (todo.completedCount || 0) + 1;
+      const updates: Partial<Todo> = { 
+        completedCount: newCompletedCount 
+      };
+      if (todo.targetCount && newCompletedCount >= todo.targetCount) {
+        updates.status = 'done';
+      }
+      updateTodo(todo.id, updates);
     }
   };
 
@@ -264,6 +279,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tomatoTimeText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  countContainer: {
+    width: 60,
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  countText: {
     fontSize: 12,
     color: '#666',
   },
