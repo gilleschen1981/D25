@@ -147,6 +147,10 @@ export default function HabitScreen() {
   }, {} as Record<string, Habit[]>);
 
   const handleAddHabit = (period: string) => {
+    useTodoStore.setState({ 
+      editingTodoId: null,
+      editingType: 'habit'
+    });
     router.push({
       pathname: '/modal/edit-todo',
       params: { 
@@ -158,7 +162,10 @@ export default function HabitScreen() {
   };
 
   const handleLongPress = (habit: Habit) => {
-    useTodoStore.setState({ editingTodoId: habit.id });
+    useTodoStore.setState({ 
+      editingTodoId: habit.id,
+      editingType: 'habit'
+    });
     router.push('/modal/edit-todo');
   };
 

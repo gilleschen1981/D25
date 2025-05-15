@@ -45,6 +45,7 @@ export interface AppStateProps {
   diaries: Diary[];
   settings: Settings;
   editingTodoId: string | null;
+  editingType: 'todo' | 'habit' | null;
 }
 
 
@@ -56,6 +57,7 @@ export interface AppState extends AppStateProps {
   deleteTodo: (id: string) => void;
   reorderTodos: (newOrder: Todo[]) => void;
   addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "completedCount" | "periodEndDate">) => void;
+  updateHabit: (id: string, updates: Partial<Habit>) => void;
   addDiary: (diary: Diary) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   daychange: () => Promise<void>;

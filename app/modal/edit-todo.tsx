@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, Button, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { MaterialIcons } from '@expo/vector-icons';
+import { generateRandomLightColor } from '../../src/constants/colors';
+import { Habit, HabitPeriod } from '../../src/models/types';
 
 export default function EditTodoModal() {
   const router = useRouter();
-  const { todos, addTodo, updateTodo, editingTodoId } = useTodoStore();
+  const { todos, habits, addTodo, updateTodo, addHabit, updateHabit, editingTodoId, editingType } = useTodoStore();
 
-  // Get the todo if editing
-  const existingTodo = editingTodoId ? todos.find(t => t.id === editingTodoId) : null;
+  // Get the item if editing
+  const existingItem = editingTodoId ? 
+    (editingType === 'habit' 
+      ? habits.find(h => h.id === editingTodoId) 
+      : todos.find(t => t.id === editingTodoId))
+    : null;
 
   // Form state
-  const [content, setContent] = useState(existingTodo?.content || '');
-  const [hasDueDate, setHasDueDate] = useState(!!existingTodo?.dueDate);
-  const [dueDate, setDueDate] = useState(existingTodo?.dueDate || '');
+  const [content, setContent] = useState(existingItem?.content || '');
+  const [hasDueDate, setHasDueDate] = useState(!!existingItem?.dueDate);
+  const [dueDate, setDueDate] = useState(existingItem?.dueDate || '');
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const setToday = () => {
@@ -77,10 +83,10 @@ export default function EditTodoModal() {
       setDueDate(dateStr);
     }
   };
-  const [hasTomatoTime, setHasTomatoTime] = useState(!!existingTodo?.tomatoTime);
-  const [tomatoTime, setTomatoTime] = useState(existingTodo?.tomatoTime?.toString() || '5');
-  const [hasTargetCount, setHasTargetCount] = useState(!!existingTodo?.targetCount);
-  const [targetCount, setTargetCount] = useState(existingTodo?.targetCount?.toString() || '1');
+  const [hasTomatoTime, setHasTomatoTime] = useState(!!existingItem?.tomatoTime);
+  const [tomatoTime, setTomatoTime] = useState(existingItem?.tomatoTime?.toString() || '5');
+  const [hasTargetCount, setHasTargetCount] = useState(!!existingItem?.targetCount);
+  const [targetCount, setTargetCount] = useState(existingItem?.targetCount?.toString() || '1');
 
   const handleSave = () => {
     if (!content.trim()) {
@@ -102,18 +108,45 @@ export default function EditTodoModal() {
       return;
     }
 
-    const todoData = {
-      content,
-      dueDate: hasDueDate ? dueDate : undefined,
-      tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
-      targetCount: hasTargetCount ? parseInt(targetCount) : undefined,
-    };
+    const params = useLocalSearchParams();
+    const period = (params.period as string) || (existingItem as Habit)?.period || 'daily';
 
-    if (existingTodo) {
-      updateTodo(existingTodo.id, todoData);
+    if (editingType === 'habit') {
+      const habitData = {
+        content,
+        period: period as HabitPeriod,
+        dueDate: hasDueDate ? dueDate : undefined,
+        tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
+        targetCount: hasTargetCount ? parseInt(targetCount) : undefined,
+        backgroundColor: existingItem?.backgroundColor || generateRandomLightColor(),
+        priority: existingItem?.priority || 50,
+        periodEndDate: (existingItem as Habit)?.periodEndDate || new Date().toISOString(),
+        completedCount: (existingItem as Habit)?.completedCount || 0,
+        status: (existingItem as Habit)?.status || 'active'
+      };
+
+      if (existingItem) {
+        updateHabit(existingItem.id, habitData);
+      } else {
+        addHabit(habitData);
+      }
     } else {
-      addTodo(todoData);
+      const todoData = {
+        content,
+        dueDate: hasDueDate ? dueDate : undefined,
+        tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
+        targetCount: hasTargetCount ? parseInt(targetCount) : undefined,
+        backgroundColor: existingItem?.backgroundColor || generateRandomLightColor(),
+        priority: existingItem?.priority || 50
+      };
+
+      if (existingItem) {
+        updateTodo(existingItem.id, todoData);
+      } else {
+        addTodo(todoData);
+      }
     }
+
 
     router.back();
   };
@@ -124,7 +157,11 @@ export default function EditTodoModal() {
 
   return (
     <View style={[styles.container]}>
-      <Stack.Screen options={{ title: existingTodo ? '编辑待办事项' : '新建待办事项' }} />
+      <Stack.Screen options={{ 
+        title: existingItem 
+          ? (editingType === 'habit' ? '编辑习惯' : '编辑待办事项')
+          : (editingType === 'habit' ? '新建习惯' : '新建待办事项') 
+      }} />
 
       <TextInput
         style={styles.contentInput}

@@ -158,6 +158,10 @@ export default function TodoScreen() {
   });
 
   const handleAddTodo = () => {
+    useTodoStore.setState({ 
+      editingTodoId: null,
+      editingType: 'todo'
+    });
     router.push({
       pathname: '/modal/edit-todo',
       params: { 
@@ -168,7 +172,10 @@ export default function TodoScreen() {
 
   const handleLongPress = (todo: Todo) => {
     setLongPressedTodo(todo);
-    useTodoStore.setState({ editingTodoId: todo.id });
+    useTodoStore.setState({ 
+      editingTodoId: todo.id,
+      editingType: 'todo'
+    });
     router.push('/modal/edit-todo');
   };
 

@@ -20,6 +20,7 @@ const initialState: AppStateProps = {
       defaultTomatoTime: undefined,
     },
     editingTodoId: null,
+    editingType: null,
   };
 
 export const useTodoStore = create<AppState>()(
@@ -96,6 +97,18 @@ export const useTodoStore = create<AppState>()(
         }
       },
 
+      updateHabit: (id: string, updates: Partial<Habit>) => {
+        try {
+          set((state) => ({
+            habits: state.habits.map((habit) =>
+              habit.id === id ? { ...habit, ...updates } : habit
+            ),
+          }));
+        } catch (error) {
+          console.error('Update error:', error);
+        }
+      },
+
       // Diary actions
       addDiary: (diary: Diary) => {
         try {
@@ -159,6 +172,8 @@ export const useTodoStore = create<AppState>()(
           habits: state.habits,
           diaries: state.diaries,
           settings: state.settings,
+          editingTodoId: state.editingTodoId,
+          editingType: state.editingType,
         };
       },
       onRehydrateStorage: () => {
