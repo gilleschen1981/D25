@@ -21,6 +21,7 @@ const initialState: AppStateProps = {
     },
     editingTodoId: null,
     editingType: null,
+    editingPeriod: null,
   };
 
 export const useTodoStore = create<AppState>()(
@@ -120,6 +121,10 @@ export const useTodoStore = create<AppState>()(
       },
 
       // Settings actions
+      setEditingPeriod: (period: HabitPeriod | null) => {
+        set({ editingPeriod: period });
+      },
+
       updateSettings: (updates: Partial<Settings>) => {
         set((state) => ({
           settings: { ...state.settings, ...updates },
@@ -174,6 +179,7 @@ export const useTodoStore = create<AppState>()(
           settings: state.settings,
           editingTodoId: state.editingTodoId,
           editingType: state.editingType,
+          editingPeriod: state.editingPeriod,
         };
       },
       onRehydrateStorage: () => {

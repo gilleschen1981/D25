@@ -46,6 +46,7 @@ export interface AppStateProps {
   settings: Settings;
   editingTodoId: string | null;
   editingType: 'todo' | 'habit' | null;
+  editingPeriod: HabitPeriod | null;
 }
 
 

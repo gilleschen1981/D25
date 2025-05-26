@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform } f
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
-import { Habit } from '../../src/models/types';
+import { Habit, HabitPeriod } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
@@ -87,7 +87,7 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable }: {
 }
 
 function HabitGroup({ period, habits, onAddHabit, onLongPress, activeSwipeable, setActiveSwipeable }: {
-  period: string;
+  period: HabitPeriod;
   habits: Habit[];
   onAddHabit: () => void;
   onLongPress: (habit: Habit) => void;
@@ -139,23 +139,23 @@ export default function HabitScreen() {
 
   // Group habits by period
   const groupedHabits = habits.reduce((acc, habit) => {
-    if (!acc[habit.period]) {
-      acc[habit.period] = [];
+    const period = habit.period as HabitPeriod;
+    if (!acc[period]) {
+      acc[period] = [];
     }
-    acc[habit.period].push(habit);
+    acc[period].push(habit);
     return acc;
-  }, {} as Record<string, Habit[]>);
+  }, {} as Record<HabitPeriod, Habit[]>);
 
-  const handleAddHabit = (period: string) => {
+  const handleAddHabit = (period: HabitPeriod) => {
     useTodoStore.setState({ 
       editingTodoId: null,
-      editingType: 'habit'
+      editingType: 'habit',
+      editingPeriod: period
     });
     router.push({
       pathname: '/modal/edit-todo',
       params: { 
-        isHabit: 'true',
-        period,
         backgroundColor: generateRandomLightColor()
       }
     });
@@ -198,16 +198,23 @@ export default function HabitScreen() {
       <FlatList
         data={Object.entries(groupedHabits)}
         keyExtractor={([period]) => period}
-        renderItem={({ item: [period, habits] }) => (
-          <HabitGroup
-            period={period}
-            habits={habits}
-            onAddHabit={() => handleAddHabit(period)}
-            onLongPress={handleLongPress}
-            activeSwipeable={activeSwipeable}
-            setActiveSwipeable={setActiveSwipeable}
-          />
-        )}
+        renderItem={({ item: [period, habits] }) => {
+          const validPeriods: HabitPeriod[] = ['daily', 'weekly', 'monthly', 'custom'];
+          const habitPeriod = validPeriods.includes(period as HabitPeriod) 
+            ? period as HabitPeriod 
+            : 'daily';
+          
+          return (
+            <HabitGroup
+              period={habitPeriod}
+              habits={habits}
+              onAddHabit={() => handleAddHabit(habitPeriod)}
+              onLongPress={handleLongPress}
+              activeSwipeable={activeSwipeable}
+              setActiveSwipeable={setActiveSwipeable}
+            />
+          );
+        }}
         contentContainerStyle={styles.listContainer}
       />
     </View>

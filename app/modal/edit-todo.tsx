@@ -9,7 +9,8 @@ import { Habit, HabitPeriod } from '../../src/models/types';
 
 export default function EditTodoModal() {
   const router = useRouter();
-  const { todos, habits, addTodo, updateTodo, addHabit, updateHabit, editingTodoId, editingType } = useTodoStore();
+  const params = useLocalSearchParams();
+  const { todos, habits, addTodo, updateTodo, addHabit, updateHabit, editingTodoId, editingType, editingPeriod } = useTodoStore();
 
   // Get the item if editing
   const existingItem = editingTodoId ? 
@@ -17,7 +18,7 @@ export default function EditTodoModal() {
       ? habits.find(h => h.id === editingTodoId) 
       : todos.find(t => t.id === editingTodoId))
     : null;
-
+  console.log("EditTodo param: ", existingItem)
   // Form state
   const [content, setContent] = useState(existingItem?.content || '');
   const [hasDueDate, setHasDueDate] = useState(!!existingItem?.dueDate);
@@ -94,7 +95,7 @@ export default function EditTodoModal() {
       return;
     }
 
-    if (hasDueDate && dueDate) {
+    if (editingType !== 'habit' && hasDueDate && dueDate) {
       const now = new Date();
       const selected = new Date(dueDate);
       if (selected <= now) {
@@ -108,16 +109,15 @@ export default function EditTodoModal() {
       return;
     }
 
-    const params = useLocalSearchParams();
-    const period = (params.period as string) || (existingItem as Habit)?.period || 'daily';
+    const periodValue = editingPeriod || (existingItem as Habit)?.period || 'daily';
 
     if (editingType === 'habit') {
       const habitData = {
         content,
-        period: period as HabitPeriod,
-        dueDate: hasDueDate ? dueDate : undefined,
+        period: periodValue as HabitPeriod,
+        dueDate: undefined,
         tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
-        targetCount: hasTargetCount ? parseInt(targetCount) : undefined,
+        targetCount: hasTargetCount ? parseInt(targetCount) : 1,
         backgroundColor: existingItem?.backgroundColor || generateRandomLightColor(),
         priority: existingItem?.priority || 50,
         periodEndDate: (existingItem as Habit)?.periodEndDate || new Date().toISOString(),
@@ -130,7 +130,7 @@ export default function EditTodoModal() {
       } else {
         addHabit(habitData);
       }
-    } else {
+    } else  {
       const todoData = {
         content,
         dueDate: hasDueDate ? dueDate : undefined,
@@ -172,50 +172,52 @@ export default function EditTodoModal() {
         autoFocus
       />
 
-      <View style={styles.section}>
-        <View style={styles.switchRow}>
-          <Text style={styles.label}>设置截止时间</Text>
-          <Switch
-            value={hasDueDate}
-            onValueChange={setHasDueDate}
-          />
-        </View>
-        {hasDueDate && (
-          <View>
-            <View style={styles.dateOptionRow}>
-              <Button title="今日" onPress={setToday} />
-              <Button title="本周" onPress={setThisWeek} />
-            </View>
-            {hasDueDate && (
-              Platform.OS === 'web' ? (
-                <input
-                  type="datetime-local"
-                  value={dueDate}
-                  onChange={(e) => {
-                    setDueDate(e.target.value);
-                  }}
-                  style={{
-                    fontSize: 16,
-                    padding: 10,
-                    borderWidth: 1,
-                    borderColor: '#ddd',
-                    borderRadius: 5,
-                    marginTop: 10,
-                    width: '100%'
-                  }}
-                />
-              ) : (
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="datetime"
-                  display="default"
-                  onChange={handleDateChange}
-                />
-              )
-            )}
+      {editingType !== 'habit' && (
+        <View style={styles.section}>
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>设置截止时间</Text>
+            <Switch
+              value={hasDueDate}
+              onValueChange={setHasDueDate}
+            />
           </View>
-        )}
-      </View>
+          {hasDueDate && (
+            <View>
+              <View style={styles.dateOptionRow}>
+                <Button title="今日" onPress={setToday} />
+                <Button title="本周" onPress={setThisWeek} />
+              </View>
+              {hasDueDate && (
+                Platform.OS === 'web' ? (
+                  <input
+                    type="datetime-local"
+                    value={dueDate}
+                    onChange={(e) => {
+                      setDueDate(e.target.value);
+                    }}
+                    style={{
+                      fontSize: 16,
+                      padding: 10,
+                      borderWidth: 1,
+                      borderColor: '#ddd',
+                      borderRadius: 5,
+                      marginTop: 10,
+                      width: '100%'
+                    }}
+                  />
+                ) : (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="datetime"
+                    display="default"
+                    onChange={handleDateChange}
+                  />
+                )
+              )}
+            </View>
+          )}
+        </View>
+      )}
 
       <View style={styles.section}>
         <View style={styles.switchRow}>
