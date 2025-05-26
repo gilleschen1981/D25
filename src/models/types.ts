@@ -42,7 +42,7 @@ export interface Settings {
 export interface AppStateProps {
   todos: Todo[];
   habits: Habit[];
-  diaries: Diary[];
+  diary: Diary;
   settings: Settings;
   editingTodoId: string | null;
   editingType: 'todo' | 'habit' | null;
@@ -59,7 +59,7 @@ export interface AppState extends AppStateProps {
   reorderTodos: (newOrder: Todo[]) => void;
   addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "completedCount" | "periodEndDate">) => void;
   updateHabit: (id: string, updates: Partial<Habit>) => void;
-  addDiary: (diary: Diary) => void;
+  setDiary: (diary: Diary) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   daychange: () => Promise<void>;
 }

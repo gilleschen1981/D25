@@ -7,11 +7,16 @@ import { AppStateProps, AppState, Todo, Habit, Diary, Settings, HabitPeriod } fr
 import { todoSchema, habitSchema, diarySchema } from '../models/schemas';
 import { mockHabits } from '../utils/mockHabits';
 import { generateRandomLightColor } from '../constants/colors';
+import { object } from 'yup';
 
 const initialState: AppStateProps = {
     todos: [],
     habits: JSON.parse(JSON.stringify(mockHabits)),
-    diaries: [],
+    diary: {
+      date: new Date().toISOString().split('T')[0],
+      content: '',
+      ratings: {}
+    },
     settings: {
       soundEnabled: true,
       habitReminderEnabled: false,
@@ -111,13 +116,8 @@ export const useTodoStore = create<AppState>()(
       },
 
       // Diary actions
-      addDiary: (diary: Diary) => {
-        try {
-          diarySchema.validateSync(diary);
-          set((state) => ({ diaries: [...state.diaries, diary] }));
-        } catch (error) {
-          console.error('Validation error:', error);
-        }
+      setDiary: (diary: Diary) => {
+        set({ diary: diary });
       },
 
       // Settings actions
@@ -175,7 +175,7 @@ export const useTodoStore = create<AppState>()(
         return {
           todos: state.todos,
           habits: state.habits,
-          diaries: state.diaries,
+          diary: state.diary,
           settings: state.settings,
           editingTodoId: state.editingTodoId,
           editingType: state.editingType,
