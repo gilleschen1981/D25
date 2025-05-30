@@ -27,15 +27,19 @@ export interface Diary {
   ratings: Record<string, RatingValue>; // dimension: rating
 }
 
-// Settings types
-export type DefaultSortOption = 'priority' | 'dueDate';
-
 export interface Settings {
-  soundEnabled: boolean;
-  habitReminderEnabled: boolean;
-  defaultDiaryTemplate: string;
-  defaultSort: DefaultSortOption;
-  defaultTomatoTime?: number;
+  general: {
+    soundEnabled: boolean;
+    reminderEnabled: boolean;
+    remindBefore:number;
+  };
+  todo: {
+    defaultTomatoTime: number;
+  };
+  diary: {
+    diaryTemplate: string;
+    customDiaryTags: string[];
+  };
 }
 
 // App state

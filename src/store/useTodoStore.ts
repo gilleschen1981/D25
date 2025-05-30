@@ -18,11 +18,18 @@ const initialState: AppStateProps = {
       ratings: {}
     },
     settings: {
-      soundEnabled: true,
-      habitReminderEnabled: false,
-      defaultDiaryTemplate: 'simple',
-      defaultSort: 'priority',
-      defaultTomatoTime: undefined,
+      general: {
+        soundEnabled: true,
+        reminderEnabled: false,
+        remindBefore: 5
+      },
+      todo: {
+        defaultTomatoTime: 25
+      },
+      diary: {
+        diaryTemplate: 'simple',
+        customDiaryTags: []
+      }
     },
     editingTodoId: null,
     editingType: null,
