@@ -8,9 +8,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
 
-function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable }: {
+function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onStartPress }: {
   item: Habit;
   onLongPress: (habit: Habit) => void;
+  onStartPress: (habit: Habit) => void;
   activeSwipeable: Swipeable | null;
   setActiveSwipeable: (swipeable: Swipeable | null) => void;
 }) {
@@ -76,21 +77,57 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable }: {
         onLongPress={() => onLongPress(item)}
       >
         <View style={styles.contentContainer}>
-          <Text style={styles.habitTitle}>{item.content}</Text>
-          <Text style={styles.habitProgress}>
-            {item.completedCount}/{item.targetCount}
-          </Text>
+          <Text style={[
+            styles.habitTitle,
+            item.status === 'done' && styles.doneText
+          ]}>{item.content}</Text>
+        </View>
+        
+        <View style={styles.infoContainer}>
+          <View style={styles.dueDateContainer}>
+            <Text style={styles.dueDateLabel}>截至</Text>
+            <Text style={styles.dueDateValue}>
+              {item.dueDate ? 
+                `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${Strings.common.minutes}` : 
+                '-'}
+            </Text>
+          </View>
+
+          <View style={styles.tomatoTimeContainer}>
+            <Text style={styles.tomatoTimeText}>
+              {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
+            </Text>
+          </View>
+
+          <View style={styles.countContainer}>
+            <Text style={styles.countText}>
+              {item.targetCount ? `${item.completedCount || 0}/${item.targetCount}` : '-'}
+            </Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={[
+              styles.startButton,
+              item.status === 'done' && styles.disabledButton
+            ]}
+            onPress={() => item.status !== 'done' && onStartPress(item)}
+            disabled={item.status === 'done'}
+          >
+            <Text style={styles.startButtonText}>开始</Text>
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     </Swipeable>
   );
 }
 
-function HabitGroup({ period, habits, onAddHabit, onLongPress, activeSwipeable, setActiveSwipeable }: {
+function HabitGroup({ period, groupname, habits, onAddHabit, onLongPress, activeSwipeable, setActiveSwipeable, onStartPress }: {
   period: HabitPeriod;
   habits: Habit[];
+  groupname:string;
   onAddHabit: () => void;
   onLongPress: (habit: Habit) => void;
+  onStartPress: (habit: Habit) => void;
   activeSwipeable: Swipeable | null;
   setActiveSwipeable: (swipeable: Swipeable | null) => void;
 }) {
@@ -102,7 +139,7 @@ function HabitGroup({ period, habits, onAddHabit, onLongPress, activeSwipeable, 
         style={styles.groupHeader}
         onPress={() => setExpanded(!expanded)}
       >
-        <Text style={styles.groupTitle}>{period}</Text>
+        <Text style={styles.groupTitle}>{groupname}({period})</Text>
         <View style={styles.groupHeaderRight}>
           <Text style={styles.groupCount}>{habits.length}个</Text>
           <TouchableOpacity onPress={onAddHabit}>
@@ -121,6 +158,7 @@ function HabitGroup({ period, habits, onAddHabit, onLongPress, activeSwipeable, 
           key={habit.id}
           item={habit}
           onLongPress={onLongPress}
+          onStartPress={onStartPress}
           activeSwipeable={activeSwipeable}
           setActiveSwipeable={setActiveSwipeable}
         />
@@ -169,6 +207,26 @@ export default function HabitScreen() {
       editingGroupId: habit.groupId
     });
     router.push('/modal/edit-todo');
+  };
+
+  const handleStartHabit = (habit: Habit) => {
+    if (habit.tomatoTime) {
+      useTodoStore.setState({ editingTodoId: habit.id });
+      router.push('/modal/timer');
+      // Use updateHabit instead of updateTodo and use the correct variable name
+      const { updateHabit } = useTodoStore.getState();
+      updateHabit(habit.id, { status: 'inProgress' });
+    } else {
+      const newCompletedCount = (habit.completedCount || 0) + 1;
+      const updates: Partial<Habit> = { 
+        completedCount: newCompletedCount 
+      };
+      if (habit.targetCount && newCompletedCount >= habit.targetCount) {
+        updates.status = 'done';
+      }
+      const { updateHabit } = useTodoStore.getState();
+      updateHabit(habit.id, updates);
+    }
   };
 
   const handleCreateGroup = () => {
@@ -247,9 +305,11 @@ export default function HabitScreen() {
         renderItem={({ item: group }) => (
           <HabitGroup
             period={group.period}
+            groupname={group.name}
             habits={group.habits}
             onAddHabit={() => handleAddHabit(group.period)}
             onLongPress={handleLongPress}
+            onStartPress={handleStartHabit}
             activeSwipeable={activeSwipeable}
             setActiveSwipeable={setActiveSwipeable}
           />
@@ -383,13 +443,12 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginRight: 16,
   },
   habitTitle: {
     fontSize: 16,
     fontWeight: '500',
+    marginBottom: 4,
   },
   habitProgress: {
     fontSize: 14,
@@ -482,4 +541,55 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dueDateContainer: {
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  dueDateLabel: {
+    fontSize: 10,
+    color: '#666',
+  },
+  dueDateValue: {
+    fontSize: 12,
+    color: '#666',
+  },
+  tomatoTimeContainer: {
+    width: 60,
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  tomatoTimeText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  countContainer: {
+    width: 60,
+    marginRight: 16,
+    alignItems: 'center',
+  },
+  countText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  startButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  startButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  doneText: {
+    textDecorationLine: 'line-through',
+    color: '#999',
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
+  }
 });

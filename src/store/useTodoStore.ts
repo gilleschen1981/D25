@@ -138,7 +138,9 @@ export const useTodoStore = create<AppState>()(
             priority: habit.priority || 50,
             groupId,
             targetCount: habit.targetCount || 1,
-            completedCount: 0
+            completedCount: 0,
+            backgroundColor: generateRandomLightColor(),
+            
           };
           habitSchema.validateSync(newHabit);
           
