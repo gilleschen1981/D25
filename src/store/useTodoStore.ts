@@ -124,7 +124,13 @@ export const useTodoStore = create<AppState>()(
 
       // Diary actions
       setDiary: (diary: Diary) => {
-        set({ diary: diary });
+        try {
+          diarySchema.validateSync(diary);
+          set({ diary: diary });
+        } catch (error) {
+          console.error('Diary validation error:', error);
+          throw error;
+        }
       },
 
       // Settings actions

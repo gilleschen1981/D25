@@ -1,7 +1,6 @@
 // Core data types
 export type TodoStatus = 'pending' | 'inProgress' | 'done';
 export type HabitPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';
-export type RatingValue = 1 | 2 | 3 | 4 | 5;
 
 export interface Todo {
   id: string; // UUID v4
@@ -24,7 +23,7 @@ export interface Habit extends Todo {
 export interface Diary {
   date: string; // YYYY-MM-DD
   content: string;
-  ratings: Record<string, RatingValue>; // dimension: rating
+  ratings: Record<string, number>; // dimension: rating
 }
 
 export interface Settings {
