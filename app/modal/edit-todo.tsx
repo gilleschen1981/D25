@@ -10,15 +10,36 @@ import { Habit, HabitPeriod } from '../../src/models/types';
 export default function EditTodoModal() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { todos, habits, addTodo, updateTodo, addHabit, updateHabit, editingTodoId, editingType, editingPeriod } = useTodoStore();
+  const { 
+    todos, 
+    habitGroups, 
+    addTodo, 
+    updateTodo, 
+    addHabit, 
+    updateHabit, 
+    editingTodoId, 
+    editingType, 
+    editingGroupId 
+  } = useTodoStore();
 
   // Get the item if editing
-  const existingItem = editingTodoId ? 
-    (editingType === 'habit' 
-      ? habits.find(h => h.id === editingTodoId) 
-      : todos.find(t => t.id === editingTodoId))
-    : null;
-  console.log("EditTodo param: ", existingItem)
+  let existingItem = null;
+  if (editingTodoId) {
+    if (editingType === 'habit') {
+      // Find the habit in the habit groups
+      for (const group of habitGroups) {
+        const habit = group.habits.find(h => h.id === editingTodoId);
+        if (habit) {
+          existingItem = habit;
+          break;
+        }
+      }
+    } else {
+      existingItem = todos.find(t => t.id === editingTodoId);
+    }
+  }
+  
+  console.log("EditTodo param: ", existingItem);
   // Form state
   const [content, setContent] = useState(existingItem?.content || '');
   const [hasDueDate, setHasDueDate] = useState(!!existingItem?.dueDate);
@@ -104,39 +125,44 @@ export default function EditTodoModal() {
       }
     }
 
-    if (hasTargetCount && (!targetCount || parseInt(targetCount) < 2)) {
-      Alert.alert('错误', '重复次数必须大于1');
+    if (hasTomatoTime && (!tomatoTime || parseInt(tomatoTime) < 1)) {
+      Alert.alert('错误', '番茄时间必须大于0');
       return;
     }
 
-    const periodValue = editingPeriod || (existingItem as Habit)?.period || 'daily';
+    if (hasTargetCount && (!targetCount || parseInt(targetCount) < 1)) {
+      Alert.alert('错误', '目标次数必须大于0');
+      return;
+    }
 
     if (editingType === 'habit') {
+      // Make sure we have a valid group ID
+      if (!editingGroupId) {
+        Alert.alert('错误', '未指定习惯组');
+        return;
+      }
+
       const habitData = {
         content,
-        period: periodValue as HabitPeriod,
-        dueDate: undefined,
         tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
         targetCount: hasTargetCount ? parseInt(targetCount) : 1,
-        backgroundColor: existingItem?.backgroundColor || generateRandomLightColor(),
-        priority: existingItem?.priority || 50,
-        periodEndDate: (existingItem as Habit)?.periodEndDate || new Date().toISOString(),
-        completedCount: (existingItem as Habit)?.completedCount || 0,
-        status: (existingItem as Habit)?.status || 'active'
+        completedCount: existingItem?.completedCount || 0,
+        backgroundColor: params.backgroundColor as string || existingItem?.backgroundColor || generateRandomLightColor(),
+        priority: existingItem?.priority || 50
       };
 
       if (existingItem) {
         updateHabit(existingItem.id, habitData);
       } else {
-        addHabit(habitData);
+        addHabit(editingGroupId, habitData);
       }
-    } else  {
+    } else {
       const todoData = {
         content,
         dueDate: hasDueDate ? dueDate : undefined,
         tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
         targetCount: hasTargetCount ? parseInt(targetCount) : undefined,
-        backgroundColor: existingItem?.backgroundColor || generateRandomLightColor(),
+        backgroundColor: params.backgroundColor as string || existingItem?.backgroundColor || generateRandomLightColor(),
         priority: existingItem?.priority || 50
       };
 
@@ -146,7 +172,6 @@ export default function EditTodoModal() {
         addTodo(todoData);
       }
     }
-
 
     router.back();
   };

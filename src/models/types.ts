@@ -15,9 +15,18 @@ export interface Todo {
   completedCount?: number;
 }
 
-export interface Habit extends Todo {
+export interface Habit extends Todo{
+  groupId: string; // Reference to the parent HabitGroup
+}
+
+export interface HabitGroup {
+  id: string; // UUID v4
+  name: string; // Group name
   period: HabitPeriod;
-  periodEndDate: string; // ISO8601 format
+  startDate: string; // ISO8601 format
+  endDate: string; // ISO8601 format
+  frequency?: number; // Optional, minutes, only used when period is 'custom'
+  habits: Habit[];
 }
 
 export interface Diary {
@@ -30,7 +39,7 @@ export interface Settings {
   general: {
     soundEnabled: boolean;
     reminderEnabled: boolean;
-    remindBefore:number;
+    remindBefore: number;
   };
   todo: {
     defaultTomatoTime: number;
@@ -44,24 +53,32 @@ export interface Settings {
 // App state
 export interface AppStateProps {
   todos: Todo[];
-  habits: Habit[];
+  habitGroups: HabitGroup[];
   diary: Diary;
   settings: Settings;
   editingTodoId: string | null;
   editingType: 'todo' | 'habit' | null;
-  editingPeriod: HabitPeriod | null;
+  editingGroupId: string | null;
 }
 
-
-
-  // Action methods
+// Action methods
 export interface AppState extends AppStateProps {
+  // Todo actions
   addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status" | "backgroundColor" | "priority">) => void;
   updateTodo: (id: string, updates: Partial<Todo>) => void;
   deleteTodo: (id: string) => void;
   reorderTodos: (newOrder: Todo[]) => void;
-  addHabit: (habit: Omit<Habit, "id" | "createdAt" | "status" | "completedCount" | "periodEndDate">) => void;
+  
+  // Habit group actions
+  addHabitGroup: (group: Omit<HabitGroup, "id" | "habits">) => string;
+  updateHabitGroup: (id: string, updates: Partial<Omit<HabitGroup, "habits">>) => void;
+  deleteHabitGroup: (id: string) => void;
+  
+  // Habit actions
+  addHabit: (groupId: string, habit: Omit<Habit, "id" | "createdAt" | "status" | "groupId">) => void;
   updateHabit: (id: string, updates: Partial<Habit>) => void;
+  deleteHabit: (id: string) => void;
+  
   setDiary: (diary: Diary) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   daychange: () => Promise<void>;
