@@ -7,65 +7,53 @@ import { Diary } from '../../src/models/types';
 import StarRating from '../../src/components/StarRating';
 
 export default function DiaryScreen() {
-  const { diary, settings, setDiary } = useTodoStore();
-  const [content, setContent] = useState('');
-  const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [weather, setWeather] = useState('');
-  const [lastSaved, setLastSaved] = useState(new Date());
+  const { diary, settings, setDiary, initDiary } = useTodoStore();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialRender = useRef(true);
+  const prevDiaryRef = useRef<Diary | null>(null);
   
   // Initialize diary content with template
   useEffect(() => {
     if (isInitialRender.current) {
-      const today = new Date().toISOString().split('T')[0];
-      const template = settings.diary.diaryTemplate === 'simple' ? 
-        `${today}\t天气：${weather}\n\n完成事项：\n\n心得体会：\n` : 
-        settings.diary.diaryTemplate.replace('{日期}', today).replace('{天气}', weather);
-      
-      if (!diary.content) {
-        setContent(template);
-      } else {
-        setContent(diary.content);
-      }
-      
-      // Initialize ratings
-      const initialRatings: Record<string, number> = {};
-      initialRatings['今日评价'] = diary.ratings['今日评价'] || 0;
-      
-      // Add custom tags from settings
-      settings.diary.customDiaryTags.forEach(tag => {
-        initialRatings[tag] = diary.ratings[tag] || 0;
-      });
-      
-      setRatings(initialRatings);
+      initDiary();
       isInitialRender.current = false;
     }
-  }, [diary, settings.diary.diaryTemplate, settings.diary.customDiaryTags, weather]);
+  }, [initDiary]);
   
   // Auto-save function
   const autoSave = useCallback(() => {
     try {
-      const updatedDiary: Diary = {
-        date: new Date().toISOString().split('T')[0],
-        content: content,
-        ratings: ratings
-      };
-      setDiary(updatedDiary);
-      setLastSaved(new Date());
-      console.log('Auto-saved diary at', new Date().toLocaleTimeString());
+      // Only save if content or ratings have changed
+      const prevDiary = prevDiaryRef.current;
+      const hasContentChanged = prevDiary && prevDiary.content !== diary.content;
+      const hasRatingsChanged = prevDiary && JSON.stringify(prevDiary.ratings) !== JSON.stringify(diary.ratings);
+      
+      if (hasContentChanged || hasRatingsChanged) {
+        setDiary({
+          ...diary,
+          lastSaved: new Date().toISOString()
+        });
+        console.log('Auto-saved diary at', new Date().toLocaleTimeString());
+        
+        // Update the previous diary reference
+        prevDiaryRef.current = { ...diary, lastSaved: new Date().toISOString() };
+      }
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [content, ratings, setDiary]);
+  }, [diary, setDiary]);
+  
+  // Update prevDiaryRef when diary changes
+  useEffect(() => {
+    if (!isInitialRender.current) {
+      prevDiaryRef.current = { ...diary };
+    }
+  }, [diary]);
   
   // Auto-save when content changes (with debounce)
-  useEffect(() => {
-    // Skip initial render
-    if (isInitialRender.current) return;
-    
-    // Skip if content is empty
-    if (content === '') return;
+  useEffect(() => {    
+    // Skip if content is empty or on initial render
+    if (!diary.content || isInitialRender.current) return;
     
     // Clear previous timer
     if (autoSaveTimerRef.current) {
@@ -84,15 +72,12 @@ export default function DiaryScreen() {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [content, autoSave]);
+  }, [diary.content, autoSave]);
   
   // Auto-save when ratings change
   useEffect(() => {
-    // Skip initial render
-    if (isInitialRender.current) return;
-    
-    // Skip if ratings are empty
-    if (Object.keys(ratings).length === 0) return;
+     // Skip if ratings are empty or on initial render
+    if (Object.keys(diary.ratings).length === 0 || isInitialRender.current) return;
     
     // Clear previous timer
     if (autoSaveTimerRef.current) {
@@ -104,17 +89,14 @@ export default function DiaryScreen() {
       autoSave();
       autoSaveTimerRef.current = null;
     }, 2000);
-  }, [ratings, autoSave]);
+  }, [diary.ratings, autoSave]);
 
   const handleSave = () => {
     try {
-      const updatedDiary: Diary = {
-        date: new Date().toISOString().split('T')[0],
-        content: content,
-        ratings: ratings
-      };
-      setDiary(updatedDiary);
-      setLastSaved(new Date());
+      setDiary({
+        ...diary,
+        lastSaved: new Date().toISOString()
+      });
       Alert.alert('保存成功', '日记已保存');
     } catch (error) {
       console.error('保存日记失败:', error);
@@ -122,22 +104,40 @@ export default function DiaryScreen() {
     }
   };
   
+  const handleContentChange = (text: string) => {
+    setDiary({
+      ...diary,
+      content: text
+    });
+  };
+  
   const handleRatingChange = (tag: string, value: number) => {
-    setRatings(prev => ({
-      ...prev,
-      [tag]: value
-    }));
+    setDiary({
+      ...diary,
+      ratings: {
+        ...diary.ratings,
+        [tag]: value
+      }
+    });
   };
   
   const handleRatingInputChange = (tag: string, valueText: string) => {
     const value = parseFloat(valueText);
     if (!isNaN(value) && value >= 0 && value <= 5) {
-      setRatings(prev => ({
-        ...prev,
-        [tag]: value
-      }));
+      setDiary({
+        ...diary,
+        ratings: {
+          ...diary.ratings,
+          [tag]: value
+        }
+      });
     }
   };
+  
+  // Format the last saved time for display
+  const formattedLastSaved = diary.lastSaved 
+    ? new Date(diary.lastSaved).toLocaleTimeString() 
+    : '未保存';
   
   return (
     <View style={styles.container}>
@@ -157,8 +157,8 @@ export default function DiaryScreen() {
           <TextInput
             style={styles.diaryInput}
             multiline
-            value={content}
-            onChangeText={setContent}
+            value={diary.content}
+            onChangeText={handleContentChange}
             placeholder="今天的日记..."
             numberOfLines={10}
             textAlignVertical="top"
@@ -173,14 +173,14 @@ export default function DiaryScreen() {
             <Text style={styles.ratingLabel}>今日评价</Text>
             <View style={styles.ratingControls}>
               <StarRating 
-                rating={ratings['今日评价'] || 0} 
+                rating={diary.ratings['今日评价'] || 0} 
                 onRatingChange={(value) => handleRatingChange('今日评价', value)}
                 size={24}
                 maxStars={5}
               />
               <TextInput
                 style={styles.ratingValue}
-                value={ratings['今日评价']?.toFixed(1) || '0.0'}
+                value={(diary.ratings['今日评价'] || 0).toFixed(1)}
                 onChangeText={(text) => handleRatingInputChange('今日评价', text)}
                 keyboardType="decimal-pad"
                 maxLength={3}
@@ -194,14 +194,14 @@ export default function DiaryScreen() {
               <Text style={styles.ratingLabel}>{tag}</Text>
               <View style={styles.ratingControls}>
                 <StarRating 
-                  rating={ratings[tag] || 0} 
+                  rating={diary.ratings[tag] || 0} 
                   onRatingChange={(value) => handleRatingChange(tag, value)}
                   size={24}
                   maxStars={5}
                 />
                 <TextInput
                   style={styles.ratingValue}
-                  value={ratings[tag]?.toFixed(1) || '0.0'}
+                  value={(diary.ratings[tag] || 0).toFixed(1)}
                   onChangeText={(text) => handleRatingInputChange(tag, text)}
                   keyboardType="decimal-pad"
                   maxLength={3}
@@ -212,7 +212,7 @@ export default function DiaryScreen() {
         </View>
         
         <Text style={styles.lastSavedText}>
-          上次保存: {lastSaved.toLocaleTimeString()}
+          上次保存: {formattedLastSaved}
         </Text>
       </ScrollView>
     </View>

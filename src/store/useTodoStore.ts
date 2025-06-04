@@ -213,68 +213,127 @@ export const useTodoStore = create<AppState>()(
         const today = new Date();
         const dateStr = today.toISOString().split('T')[0];
         
-        // Update habit groups based on period end dates
-        set((state) => {
-          const updatedGroups = state.habitGroups.map(group => {
-            const endDate = group.endDate ? new Date(group.endDate) : today;
-            
-            // If the period has ended, reset habits
-            if (endDate < today) {
-              // Calculate new end date based on period
-              const newEndDate = calculatePeriodEndDate(group.period, group.frequency);
-              
-              // Reset all habits in the group
-              const resetHabits = group.habits.map(habit => ({
-                ...habit,
-                completedCount: 0,
-                status: 'pending' as TodoStatus
-              }));
-              
-              return {
-                ...group,
-                startDate: today.toISOString(),
-                endDate: newEndDate,
-                habits: resetHabits
-              };
+        // Get current state for history
+        const currentState = {
+          todos: get().todos.filter(todo => todo.status === 'done'),
+          habitGroups: get().habitGroups,
+          diary: get().diary
+        };
+        
+        // Skip if there's nothing to save
+        if (currentState.todos.length === 0 && 
+            !currentState.diary.content && 
+            Object.keys(currentState.diary.ratings).length === 0) {
+          console.log('No completed todos or diary content to save');
+        } else {
+          // Save history to persistent storage
+          if (Platform.OS === 'web') {
+            try {
+              localStorage.setItem(`todo-history-${dateStr}`, JSON.stringify(currentState));
+              console.log(`Saved history for ${dateStr} to localStorage`);
+            } catch (error) {
+              console.error('Error saving history to localStorage:', error);
             }
-            
-            return group;
-          });
+          } else {
+            try {
+              const historyDir = `${FileSystem.documentDirectory}history`;
+              const dirInfo = await FileSystem.getInfoAsync(historyDir);
+              if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(historyDir, { intermediates: true });
+              }
+              const filePath = `${historyDir}/${dateStr}.json`;
+              await FileSystem.writeAsStringAsync(filePath, JSON.stringify(currentState));
+              console.log(`Saved history for ${dateStr} to ${filePath}`);
+            } catch (error) {
+              console.error('Error saving history to file system:', error);
+            }
+          }
+        }
+        
+        // Update state for the new day
+        set(state => {
+          // 1. Update habit groups based on period end dates
+          const updatedGroups = state.habitGroups
+            .map(group => {
+              if (!group) return null; // Skip null groups
+              
+              const endDate = group.endDate ? new Date(group.endDate) : today;
+              
+              // If the period has ended, reset habits
+              if (endDate < today) {
+                // Calculate new end date based on period
+                const newEndDate = calculatePeriodEndDate(group.period, group.frequency);
+                
+                // Reset all habits in the group
+                const resetHabits = group.habits.map(habit => ({
+                  ...habit,
+                  completedCount: 0,
+                  status: 'pending' as TodoStatus
+                }));
+                
+                return {
+                  ...group,
+                  startDate: today.toISOString(),
+                  endDate: newEndDate,
+                  habits: resetHabits
+                };
+              }
+              
+              return group;
+            })
+            .filter(Boolean) as HabitGroup[]; // Filter out null values and cast to HabitGroup[]
           
-          return { habitGroups: updatedGroups };
+          // 2. Remove empty habit groups (groups with no habits)
+          const nonEmptyGroups = updatedGroups.filter(group => group.habits.length > 0);
+          
+          // 3. Remove completed todos
+          const updatedTodos = state.todos.filter(todo => todo.status !== 'done');
+          
+          // 4. Reset diary for the new day
+          const newDiary = {
+            date: dateStr,
+            content: '',
+            ratings: {}
+          };
+          
+          return { 
+            habitGroups: nonEmptyGroups,
+            todos: updatedTodos,
+            diary: newDiary
+          };
         });
         
-        // Rest of daychange logic...
-        const doneTodos = get().todos.filter(todo => todo.status === 'done');
-        
-        if (doneTodos.length === 0) return;
+        console.log('Day change completed successfully');
+      },
 
-        if (Platform.OS === 'web') {
-          // Web implementation using localStorage
-          try {
-            localStorage.setItem(`todo-history-${dateStr}`, JSON.stringify(doneTodos));
-            set((state) => ({
-              todos: state.todos.filter(todo => todo.status !== 'done')
-            }));
-          } catch (error) {
-            console.error('Error saving history to localStorage:', error);
-          }
-        } else {
-          // Native implementation using expo-file-system
-          try {
-            const historyDir = `${FileSystem.documentDirectory}history`;
-            const dirInfo = await FileSystem.getInfoAsync(historyDir);
-            if (!dirInfo.exists) {
-              await FileSystem.makeDirectoryAsync(historyDir, { intermediates: true });
+      initDiary: () => {
+        const { diary, settings } = get();
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Only initialize if diary content is empty
+        if (!diary.content) {
+          // Create template based on settings
+          const template = settings.diary.diaryTemplate === 'simple' ? 
+            `${today}\t天气：${diary.weather || ''}\n\n完成事项：\n\n心得体会：\n` : 
+            settings.diary.diaryTemplate.replace('{日期}', today).replace('{天气}', diary.weather || '');
+          
+          // Initialize ratings if empty
+          const initialRatings: Record<string, number> = {};
+          initialRatings['今日评价'] = diary.ratings['今日评价'] || 0;
+          
+          // Add custom tags from settings
+          settings.diary.customDiaryTags.forEach(tag => {
+            initialRatings[tag] = diary.ratings[tag] || 0;
+          });
+          
+          // Update diary with template and ratings
+          set({
+            diary: {
+              ...diary,
+              content: template,
+              ratings: initialRatings
             }
-            const filePath = `${historyDir}/${dateStr}.json`;
-            await FileSystem.writeAsStringAsync(filePath, JSON.stringify(doneTodos));
-            set((state) => ({
-              todos: state.todos.filter(todo => todo.status !== 'done')
-            }));
-          } catch (error) {
-            console.error('Error in daychange:', error);
-          }
+          });
         }
       },
     }),

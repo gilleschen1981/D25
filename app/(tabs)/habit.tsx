@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Modal, TextInput } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
@@ -170,7 +170,9 @@ function HabitGroup({ period, groupname, habits, onAddHabit, onLongPress, active
 
 export default function HabitScreen() {
   const router = useRouter();
-  const { habitGroups, addHabitGroup } = useTodoStore();
+  // Use more specific selectors to prevent unnecessary re-renders
+  const habitGroups = useTodoStore(state => state.habitGroups);
+  const addHabitGroup = useTodoStore(state => state.addHabitGroup);
   const [activeSwipeable, setActiveSwipeable] = useState<Swipeable | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -182,17 +184,18 @@ export default function HabitScreen() {
   const [frequency, setFrequency] = useState<number | undefined>(undefined);
   const [frequencyUnit, setFrequencyUnit] = useState<'minutes' | 'hours' | 'days' | 'weeks' | 'months'>('days');
   
-  // Add these state variables
+  // Date picker state
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   
-  // Extract all habits from habit groups
-  const allHabits = habitGroups.flatMap(group => group.habits);
+  // Memoize derived state to prevent unnecessary recalculations
+  const allHabits = useMemo(() => 
+    habitGroups.flatMap(group => group.habits), 
+    [habitGroups]
+  );
   
-  console.log('Total habit groups:', habitGroups.length);
-  console.log('Total habits:', allHabits.length);
-
-  const handleAddHabit = (period: HabitPeriod) => {
+  // Memoize handlers to prevent unnecessary re-renders of child components
+  const handleAddHabit = useCallback((period: HabitPeriod) => {
     // Find or create group ID for this period
     const existingGroup = habitGroups.find(group => group.period === period);
     const groupId = existingGroup?.id || '';
@@ -204,18 +207,18 @@ export default function HabitScreen() {
     });
     
     router.push('/modal/edit-todo');
-  };
-
-  const handleLongPress = (habit: Habit) => {
+  }, [habitGroups, router]);
+  
+  const handleLongPress = useCallback((habit: Habit) => {
     useTodoStore.setState({ 
       editingTodoId: habit.id,
       editingType: 'habit',
       editingGroupId: habit.groupId
     });
     router.push('/modal/edit-todo');
-  };
-
-  const handleStartHabit = (habit: Habit) => {
+  }, [router]);
+  
+  const handleStartHabit = useCallback((habit: Habit) => {
     if (habit.tomatoTime) {
       useTodoStore.setState({ editingTodoId: habit.id });
       router.push('/modal/timer');
@@ -233,7 +236,7 @@ export default function HabitScreen() {
       const { updateHabit } = useTodoStore.getState();
       updateHabit(habit.id, updates);
     }
-  };
+  }, [router]);
 
   const handleCreateGroup = () => {
     // Helper function to show alerts that works on both web and mobile
