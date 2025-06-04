@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Modal, TextInput } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
@@ -178,8 +178,20 @@ export default function HabitScreen() {
   // Extract all habits from habit groups
   const allHabits = habitGroups.flatMap(group => group.habits);
   
-  console.log('Total habit groups:', habitGroups.length);
-  console.log('Total habits:', allHabits.length);
+  const prevHabitGroupsLength = useRef(habitGroups.length);
+  const prevAllHabitsLength = useRef(allHabits.length);
+
+  useEffect(() => {
+    // Only log when the counts actually change
+    if (prevHabitGroupsLength.current !== habitGroups.length || 
+        prevAllHabitsLength.current !== allHabits.length) {
+      console.log('Total habit groups:', habitGroups.length);
+      console.log('Total habits:', allHabits.length);
+      
+      prevHabitGroupsLength.current = habitGroups.length;
+      prevAllHabitsLength.current = allHabits.length;
+    }
+  }, [habitGroups.length, allHabits.length]);
 
   const handleAddHabit = (period: HabitPeriod) => {
     // Find or create group ID for this period

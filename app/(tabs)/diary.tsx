@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Text, View, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,31 +12,36 @@ export default function DiaryScreen() {
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [weather, setWeather] = useState('');
   const [lastSaved, setLastSaved] = useState(new Date());
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialRender = useRef(true);
   
   // Initialize diary content with template
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const template = settings.diary.diaryTemplate === 'simple' ? 
-      `${today}\t天气：${weather}\n\n完成事项：\n\n心得体会：\n` : 
-      settings.diary.diaryTemplate.replace('{日期}', today).replace('{天气}', weather);
-    
-    if (!diary.content) {
-      setContent(template);
-    } else {
-      setContent(diary.content);
+    if (isInitialRender.current) {
+      const today = new Date().toISOString().split('T')[0];
+      const template = settings.diary.diaryTemplate === 'simple' ? 
+        `${today}\t天气：${weather}\n\n完成事项：\n\n心得体会：\n` : 
+        settings.diary.diaryTemplate.replace('{日期}', today).replace('{天气}', weather);
+      
+      if (!diary.content) {
+        setContent(template);
+      } else {
+        setContent(diary.content);
+      }
+      
+      // Initialize ratings
+      const initialRatings: Record<string, number> = {};
+      initialRatings['今日评价'] = diary.ratings['今日评价'] || 0;
+      
+      // Add custom tags from settings
+      settings.diary.customDiaryTags.forEach(tag => {
+        initialRatings[tag] = diary.ratings[tag] || 0;
+      });
+      
+      setRatings(initialRatings);
+      isInitialRender.current = false;
     }
-    
-    // Initialize ratings
-    const initialRatings: Record<string, number> = {};
-    initialRatings['今日评价'] = diary.ratings['今日评价'] || 0;
-    
-    // Add custom tags from settings
-    settings.diary.customDiaryTags.forEach(tag => {
-      initialRatings[tag] = diary.ratings[tag] || 0;
-    });
-    
-    setRatings(initialRatings);
-  }, [diary, settings.diary.diaryTemplate]);
+  }, [diary, settings.diary.diaryTemplate, settings.diary.customDiaryTags, weather]);
   
   // Auto-save function
   const autoSave = useCallback(() => {
@@ -56,21 +61,51 @@ export default function DiaryScreen() {
   
   // Auto-save when content changes (with debounce)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      autoSave();
-    }, 2000); // Auto-save 2 seconds after typing stops
+    // Skip initial render
+    if (isInitialRender.current) return;
     
-    return () => clearTimeout(timer);
+    // Skip if content is empty
+    if (content === '') return;
+    
+    // Clear previous timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    // Set new timer
+    autoSaveTimerRef.current = setTimeout(() => {
+      autoSave();
+      autoSaveTimerRef.current = null;
+    }, 2000);
+    
+    // Cleanup on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
   }, [content, autoSave]);
   
   // Auto-save when ratings change
   useEffect(() => {
-    // Skip the initial render
-    if (lastSaved.getTime() === 0) return;
+    // Skip initial render
+    if (isInitialRender.current) return;
     
-    autoSave();
+    // Skip if ratings are empty
+    if (Object.keys(ratings).length === 0) return;
+    
+    // Clear previous timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    // Set new timer
+    autoSaveTimerRef.current = setTimeout(() => {
+      autoSave();
+      autoSaveTimerRef.current = null;
+    }, 2000);
   }, [ratings, autoSave]);
-  
+
   const handleSave = () => {
     try {
       const updatedDiary: Diary = {

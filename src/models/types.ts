@@ -63,6 +63,7 @@ export interface AppStateProps {
 
 // Action methods
 export interface AppState extends AppStateProps {
+  reset(): unknown;
   // Todo actions
   addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status" | "backgroundColor" | "priority">) => void;
   updateTodo: (id: string, updates: Partial<Todo>) => void;

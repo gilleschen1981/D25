@@ -39,7 +39,7 @@ export const useTodoStore = create<AppState>()(
   persist(
     (set, get) => ({
       ...initialState,
-
+      reset: () => set(initialState),
       // Todo actions
       addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status" | "backgroundColor" | "priority">) => {
         try {
