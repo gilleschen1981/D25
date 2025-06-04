@@ -128,7 +128,7 @@ export const useTodoStore = create<AppState>()(
       },
 
       // Habit actions
-      addHabit: (groupId: string, habit: Omit<Habit, "id" | "createdAt" | "status" | "groupId">) => {
+      addHabit: (groupId: string, habit: Omit<Habit, "id" | "createdAt" | "backgroundColor"| "status" | "groupId">) => {
         try {
           const newHabit: Habit = {
             ...habit,
@@ -216,7 +216,7 @@ export const useTodoStore = create<AppState>()(
         // Update habit groups based on period end dates
         set((state) => {
           const updatedGroups = state.habitGroups.map(group => {
-            const endDate = new Date(group.endDate);
+            const endDate = group.endDate ? new Date(group.endDate) : today;
             
             // If the period has ended, reset habits
             if (endDate < today) {

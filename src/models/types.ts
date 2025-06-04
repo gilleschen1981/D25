@@ -23,9 +23,10 @@ export interface HabitGroup {
   id: string; // UUID v4
   name: string; // Group name
   period: HabitPeriod;
-  startDate: string; // ISO8601 format
-  endDate: string; // ISO8601 format
+  startDate?: string; // ISO8601 format
+  endDate?: string; // ISO8601 format
   frequency?: number; // Optional, minutes, only used when period is 'custom'
+  frequencyUnit?: 'minutes' | 'hours' | 'days' | 'weeks' | 'months'; // Optional, only used when period is 'custom'
   habits: Habit[];
 }
 
@@ -76,7 +77,7 @@ export interface AppState extends AppStateProps {
   deleteHabitGroup: (id: string) => void;
   
   // Habit actions
-  addHabit: (groupId: string, habit: Omit<Habit, "id" | "createdAt" | "status" | "groupId">) => void;
+  addHabit: (groupId: string, habit: Omit<Habit, "id" | "createdAt" | "status" | "backgroundColor" | "groupId">) => void;
   updateHabit: (id: string, updates: Partial<Habit>) => void;
   deleteHabit: (id: string) => void;
   

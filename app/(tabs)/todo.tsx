@@ -140,9 +140,7 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
 
 export default function TodoScreen() {
   const router = useRouter();
-  const { todos, updateTodo, deleteTodo } = useTodoStore();
-  const [_, forceUpdate] = useState({});
-  const [longPressedTodo, setLongPressedTodo] = useState<Todo | null>(null);
+  const { todos, updateTodo } = useTodoStore();
   const [activeSwipeable, setActiveSwipeable] = useState<Swipeable | null>(null);
 
   // Sort todos according to requirements
@@ -162,16 +160,10 @@ export default function TodoScreen() {
       editingTodoId: null,
       editingType: 'todo'
     });
-    router.push({
-      pathname: '/modal/edit-todo',
-      params: { 
-        backgroundColor: generateRandomLightColor() 
-      }
-    });
+    router.push('/modal/edit-todo');
   };
 
   const handleLongPress = (todo: Todo) => {
-    setLongPressedTodo(todo);
     useTodoStore.setState({ 
       editingTodoId: todo.id,
       editingType: 'todo'
@@ -182,8 +174,8 @@ export default function TodoScreen() {
   const handleStartTodo = (todo: Todo) => {
     if (todo.tomatoTime) {
       useTodoStore.setState({ editingTodoId: todo.id });
-      router.push('/modal/timer');
       updateTodo(todo.id, { status: 'inProgress' });
+      router.push('/modal/timer');
     } else {
       const newCompletedCount = (todo.completedCount || 0) + 1;
       const updates: Partial<Todo> = { 

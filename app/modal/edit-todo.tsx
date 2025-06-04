@@ -147,7 +147,6 @@ export default function EditTodoModal() {
         tomatoTime: hasTomatoTime ? parseInt(tomatoTime) : undefined,
         targetCount: hasTargetCount ? parseInt(targetCount) : 1,
         completedCount: existingItem?.completedCount || 0,
-        backgroundColor: params.backgroundColor as string || existingItem?.backgroundColor || generateRandomLightColor(),
         priority: existingItem?.priority || 50
       };
 

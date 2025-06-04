@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Modal, TextInput } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
@@ -7,6 +7,7 @@ import { Habit, HabitPeriod } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onStartPress }: {
   item: Habit;
@@ -169,29 +170,27 @@ function HabitGroup({ period, groupname, habits, onAddHabit, onLongPress, active
 
 export default function HabitScreen() {
   const router = useRouter();
-  const { habitGroups, deleteHabit, addHabitGroup } = useTodoStore();
+  const { habitGroups, addHabitGroup } = useTodoStore();
   const [activeSwipeable, setActiveSwipeable] = useState<Swipeable | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupPeriod, setNewGroupPeriod] = useState<HabitPeriod>('daily');
   
+  // New state variables for custom period
+  const [startDate, setStartDate] = useState<string | undefined>(undefined);
+  const [endDate, setEndDate] = useState<string | undefined>(undefined);
+  const [frequency, setFrequency] = useState<number | undefined>(undefined);
+  const [frequencyUnit, setFrequencyUnit] = useState<'minutes' | 'hours' | 'days' | 'weeks' | 'months'>('days');
+  
+  // Add these state variables
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  
   // Extract all habits from habit groups
   const allHabits = habitGroups.flatMap(group => group.habits);
   
-  const prevHabitGroupsLength = useRef(habitGroups.length);
-  const prevAllHabitsLength = useRef(allHabits.length);
-
-  useEffect(() => {
-    // Only log when the counts actually change
-    if (prevHabitGroupsLength.current !== habitGroups.length || 
-        prevAllHabitsLength.current !== allHabits.length) {
-      console.log('Total habit groups:', habitGroups.length);
-      console.log('Total habits:', allHabits.length);
-      
-      prevHabitGroupsLength.current = habitGroups.length;
-      prevAllHabitsLength.current = allHabits.length;
-    }
-  }, [habitGroups.length, allHabits.length]);
+  console.log('Total habit groups:', habitGroups.length);
+  console.log('Total habits:', allHabits.length);
 
   const handleAddHabit = (period: HabitPeriod) => {
     // Find or create group ID for this period
@@ -204,12 +203,7 @@ export default function HabitScreen() {
       editingGroupId: groupId
     });
     
-    router.push({
-      pathname: '/modal/edit-todo',
-      params: { 
-        backgroundColor: generateRandomLightColor()
-      }
-    });
+    router.push('/modal/edit-todo');
   };
 
   const handleLongPress = (habit: Habit) => {
@@ -242,44 +236,126 @@ export default function HabitScreen() {
   };
 
   const handleCreateGroup = () => {
+    // Helper function to show alerts that works on both web and mobile
+    const showAlert = (title: string, message: string) => {
+      if (Platform.OS === 'web') {
+        window.alert(`${title}: ${message}`);
+      } else {
+        Alert.alert(title, message);
+      }
+    };
+
     if (!newGroupName.trim()) {
-      Alert.alert('错误', '组名不能为空');
+      showAlert('错误', '组名不能为空');
       return;
     }
     
     const now = new Date();
-    let endDate = new Date();
+    let endDateObj = new Date();
     
     // Set end date based on period
-    switch (newGroupPeriod) {
-      case 'daily':
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'weekly':
-        endDate.setDate(now.getDate() + (7 - now.getDay()));
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'monthly':
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'custom':
-        endDate.setDate(now.getDate() + 3); // Default 3 days for custom
-        endDate.setHours(23, 59, 59, 999);
-        break;
+    if (newGroupPeriod === 'custom') {
+      if (!startDate) {
+        showAlert('错误', '请选择开始日期');
+        return;
+      }
+      
+      if (!endDate) {
+        showAlert('错误', '请选择结束日期');
+        return;
+      }
+      
+      if (!frequency || frequency <= 0) {
+        showAlert('错误', '请输入有效的频率值（大于0）');
+        return;
+      }
+      
+      // Convert frequency to minutes based on selected unit
+      let frequencyInMinutes = frequency;
+      switch (frequencyUnit) {
+        case 'hours':
+          frequencyInMinutes *= 60;
+          break;
+        case 'days':
+          frequencyInMinutes *= 60 * 24;
+          break;
+        case 'weeks':
+          frequencyInMinutes *= 60 * 24 * 7;
+          break;
+        case 'months':
+          frequencyInMinutes *= 60 * 24 * 30; // Approximate
+          break;
+      }
+      
+      try {
+        // Log the data we're about to send
+        console.log('Creating custom habit group with data:', {
+          name: newGroupName,
+          period: newGroupPeriod,
+          startDate: startDate,
+          endDate: endDate,
+          frequency: frequencyInMinutes
+        });
+        
+        // Create the new group with all required fields
+        const newGroupId = addHabitGroup({
+          name: newGroupName,
+          period: newGroupPeriod,
+          startDate: startDate,
+          endDate: endDate,
+          frequency: frequencyInMinutes
+        });
+        
+        if (!newGroupId) {
+          throw new Error('Failed to create group - no ID returned');
+        }
+        
+        console.log('Created custom habit group with ID:', newGroupId);
+        
+        // Reset form and close modal
+        setModalVisible(false);
+        setNewGroupName('');
+        setStartDate(undefined);
+        setEndDate(undefined);
+        setFrequency(undefined);
+      } catch (error) {
+        console.error('Failed to create custom habit group:', error);
+        showAlert('创建失败', '请检查输入是否正确');
+      }
+    } else {
+      // Original logic for non-custom periods
+      switch (newGroupPeriod) {
+        case 'daily':
+          endDateObj.setHours(23, 59, 59, 999);
+          break;
+        case 'weekly':
+          endDateObj.setDate(now.getDate() + (7 - now.getDay()));
+          endDateObj.setHours(23, 59, 59, 999);
+          break;
+        case 'monthly':
+          endDateObj = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          endDateObj.setHours(23, 59, 59, 999);
+          break;
+      }
+      
+      try {
+        const newGroupId = addHabitGroup({
+          name: newGroupName,
+          period: newGroupPeriod,
+          startDate: now.toISOString(),
+          endDate: endDateObj.toISOString()
+        });
+        
+        console.log('Created standard habit group with ID:', newGroupId);
+        
+        // Reset form and close modal
+        setModalVisible(false);
+        setNewGroupName('');
+      } catch (error) {
+        console.error('Failed to create standard habit group:', error);
+        showAlert('创建失败', '请检查输入是否正确');
+      }
     }
-    
-    const newGroup = {
-      name: newGroupName,
-      period: newGroupPeriod,
-      startDate: now.toISOString(),
-      endDate: endDate.toISOString(),
-      frequency: newGroupPeriod === 'custom' ? 4320 : undefined // 3 days in minutes
-    };
-    
-    addHabitGroup(newGroup);
-    setModalVisible(false);
-    setNewGroupName('');
   };
 
   return (
@@ -371,6 +447,137 @@ export default function HabitScreen() {
               ))}
             </View>
             
+            {/* Custom period options */}
+            {newGroupPeriod === 'custom' && (
+              <>
+                <Text style={styles.inputLabel}>开始日期</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={startDate || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{
+                      fontSize: 16,
+                      padding: 10,
+                      borderWidth: 1,
+                      borderColor: '#ddd',
+                      borderRadius: 5,
+                      marginBottom: 15,
+                      width: '100%'
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity 
+                      style={styles.datePickerButton}
+                      onPress={() => setShowStartDatePicker(true)}
+                    >
+                      <Text>{startDate || '选择开始日期'}</Text>
+                    </TouchableOpacity>
+                    
+                    {showStartDatePicker && (
+                      <DateTimePicker
+                        value={new Date(startDate || Date.now())}
+                        mode="date"
+                        display="default"
+                        onChange={(event, date) => {
+                          setShowStartDatePicker(false);
+                          if (date) {
+                            setStartDate(date.toISOString().split('T')[0]);
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                
+                <Text style={styles.inputLabel}>结束日期</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={endDate || ''}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    style={{
+                      fontSize: 16,
+                      padding: 10,
+                      borderWidth: 1,
+                      borderColor: '#ddd',
+                      borderRadius: 5,
+                      marginBottom: 15,
+                      width: '100%'
+                    }}
+                  />
+                ) : (
+                  <>
+                    <TouchableOpacity 
+                      style={styles.datePickerButton}
+                      onPress={() => setShowEndDatePicker(true)}
+                    >
+                      <Text>{endDate || '选择结束日期'}</Text>
+                    </TouchableOpacity>
+                    
+                    {showEndDatePicker && (
+                      <DateTimePicker
+                        value={new Date(endDate || Date.now())}
+                        mode="date"
+                        display="default"
+                        onChange={(event, date) => {
+                          setShowEndDatePicker(false);
+                          if (date) {
+                            setEndDate(date.toISOString().split('T')[0]);
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                
+                <View style={styles.frequencyContainer}>
+                  <View style={styles.frequencyInputContainer}>
+                    <Text style={styles.inputLabel}>频率</Text>
+                    <TextInput
+                      style={styles.frequencyInput}
+                      value={frequency?.toString() || ''}
+                      onChangeText={(text) => {
+                        const num = parseInt(text);
+                        if (!isNaN(num) || text === '') {
+                          setFrequency(text === '' ? undefined : num);
+                        }
+                      }}
+                      keyboardType="numeric"
+                      placeholder="输入数值"
+                    />
+                  </View>
+                  
+                  <View style={styles.unitSelectorContainer}>
+                    <Text style={styles.inputLabel}>单位</Text>
+                    <View style={styles.unitSelector}>
+                      {(['minutes', 'hours', 'days', 'weeks', 'months'] as const).map(unit => (
+                        <TouchableOpacity
+                          key={unit}
+                          style={[
+                            styles.unitOption,
+                            frequencyUnit === unit && styles.selectedUnit
+                          ]}
+                          onPress={() => setFrequencyUnit(unit)}
+                        >
+                          <Text style={[
+                            styles.unitText,
+                            frequencyUnit === unit && styles.selectedUnitText
+                          ]}>
+                            {unit === 'minutes' ? '分钟' : 
+                             unit === 'hours' ? '小时' : 
+                             unit === 'days' ? '天' : 
+                             unit === 'weeks' ? '周' : '月'}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              </>
+            )}
+            
             <View style={styles.modalButtons}>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.cancelButton]} 
@@ -380,7 +587,18 @@ export default function HabitScreen() {
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.createButton]} 
-                onPress={handleCreateGroup}
+                onPress={() => {
+                  console.log('Create button pressed');
+                  console.log('Current state:', {
+                    newGroupName,
+                    newGroupPeriod,
+                    startDate,
+                    endDate,
+                    frequency,
+                    frequencyUnit
+                  });
+                  handleCreateGroup();
+                }}
               >
                 <Text style={styles.buttonText}>创建</Text>
               </TouchableOpacity>
@@ -603,5 +821,56 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#cccccc',
-  }
+  },
+  frequencyContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  frequencyInputContainer: {
+    flex: 1,
+    marginRight: 10,
+  },
+  frequencyInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+  },
+  unitSelectorContainer: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  unitSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  unitOption: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 8,
+    margin: 2,
+  },
+  selectedUnit: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  unitText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  selectedUnitText: {
+    color: 'white',
+  },
+  datePickerContainer: {
+    marginBottom: 15,
+  },
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+  },
 });
