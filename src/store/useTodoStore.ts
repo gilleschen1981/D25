@@ -39,7 +39,7 @@ export const useTodoStore = create<AppState>()(
   persist(
     (set, get) => ({
       ...initialState,
-      reset: () => set(initialState),
+      reset: () => set({ ...initialState, lastSaved: new Date().toISOString() }),
       // Todo actions
       addTodo: (todo: Omit<Todo, "id" | "createdAt" | "status" | "backgroundColor" | "priority">) => {
         try {
@@ -54,7 +54,10 @@ export const useTodoStore = create<AppState>()(
             completedCount: todo.completedCount || 0
           };
           todoSchema.validateSync(newTodo);
-          set((state) => ({ todos: [...state.todos, newTodo] }));
+          set((state) => ({ 
+            todos: [...state.todos, newTodo],
+            lastSaved: new Date().toISOString()
+          }));
         } catch (error) {
           console.error('Validation error:', error);
         }
@@ -66,6 +69,7 @@ export const useTodoStore = create<AppState>()(
             todos: state.todos.map((todo) =>
               todo.id === id ? { ...todo, ...updates } : todo
             ),
+            lastSaved: new Date().toISOString()
           }));
         } catch (error) {
           console.error('Update error:', error);
@@ -75,6 +79,7 @@ export const useTodoStore = create<AppState>()(
       deleteTodo: (id: string) => {
         set((state) => ({
           todos: state.todos.filter((todo) => todo.id !== id),
+          lastSaved: new Date().toISOString()
         }));
       },
 
@@ -88,7 +93,10 @@ export const useTodoStore = create<AppState>()(
           return;
         }
 
-        set({ todos: newOrder });
+        set({ 
+          todos: newOrder,
+          lastSaved: new Date().toISOString()
+        });
       },
 
       // HabitGroup actions
@@ -194,8 +202,17 @@ export const useTodoStore = create<AppState>()(
       // Diary actions
       setDiary: (diary: Diary) => {
         try {
-          diarySchema.validateSync(diary);
-          set({ diary: diary });
+          // Ensure content is never undefined
+          const diaryToSave = {
+            ...diary,
+            content: diary.content || ''
+          };
+          
+          diarySchema.validateSync(diaryToSave);
+          set({ 
+            diary: diaryToSave,
+            lastSaved: new Date().toISOString()
+          });
         } catch (error) {
           console.error('Diary validation error:', error);
           throw error;
@@ -204,7 +221,7 @@ export const useTodoStore = create<AppState>()(
 
       updateSettings: (updates: Partial<Settings>) => {
         set((state) => ({
-          settings: { ...state.settings, ...updates },
+          settings: { ...state.settings, ...updates }
         }));
       },
 
@@ -229,21 +246,31 @@ export const useTodoStore = create<AppState>()(
           // Save history to persistent storage
           if (Platform.OS === 'web') {
             try {
-              localStorage.setItem(`todo-history-${dateStr}`, JSON.stringify(currentState));
-              console.log(`Saved history for ${dateStr} to localStorage`);
+              // 获取上次保存的日期，而不是今天的日期
+              const lastSavedDate = get().lastSaved 
+                ? new Date(get().lastSaved || new Date().toISOString()).toISOString().split('T')[0]
+                : dateStr;
+                
+              localStorage.setItem(`todo-history-${lastSavedDate}`, JSON.stringify(currentState));
+              console.log(`Saved history for ${lastSavedDate} to localStorage`);
             } catch (error) {
               console.error('Error saving history to localStorage:', error);
             }
           } else {
             try {
+              // 获取上次保存的日期，而不是今天的日期
+              const lastSavedDate = get().lastSaved 
+                ? new Date(get().lastSaved || new Date().toISOString()).toISOString().split('T')[0]
+                : dateStr;
+                
               const historyDir = `${FileSystem.documentDirectory}history`;
               const dirInfo = await FileSystem.getInfoAsync(historyDir);
               if (!dirInfo.exists) {
                 await FileSystem.makeDirectoryAsync(historyDir, { intermediates: true });
               }
-              const filePath = `${historyDir}/${dateStr}.json`;
+              const filePath = `${historyDir}/${lastSavedDate}.json`;
               await FileSystem.writeAsStringAsync(filePath, JSON.stringify(currentState));
-              console.log(`Saved history for ${dateStr} to ${filePath}`);
+              console.log(`Saved history for ${lastSavedDate} to ${filePath}`);
             } catch (error) {
               console.error('Error saving history to file system:', error);
             }
@@ -260,7 +287,7 @@ export const useTodoStore = create<AppState>()(
               const endDate = group.endDate ? new Date(group.endDate) : today;
               
               // If the period has ended, reset habits
-              if (endDate < today) {
+              if (endDate >= today) {
                 // Calculate new end date based on period
                 const newEndDate = calculatePeriodEndDate(group.period, group.frequency);
                 
@@ -299,43 +326,15 @@ export const useTodoStore = create<AppState>()(
           return { 
             habitGroups: nonEmptyGroups,
             todos: updatedTodos,
-            diary: newDiary
+            diary: newDiary,
+            lastSaved: new Date().toISOString()
           };
         });
         
         console.log('Day change completed successfully');
       },
 
-      initDiary: () => {
-        const { diary, settings } = get();
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Only initialize if diary content is empty
-        if (!diary.content) {
-          // Create template based on settings
-          const template = settings.diary.diaryTemplate === 'simple' ? 
-            `${today}\t天气：${diary.weather || ''}\n\n完成事项：\n\n心得体会：\n` : 
-            settings.diary.diaryTemplate.replace('{日期}', today).replace('{天气}', diary.weather || '');
-          
-          // Initialize ratings if empty
-          const initialRatings: Record<string, number> = {};
-          initialRatings['今日评价'] = diary.ratings['今日评价'] || 0;
-          
-          // Add custom tags from settings
-          settings.diary.customDiaryTags.forEach(tag => {
-            initialRatings[tag] = diary.ratings[tag] || 0;
-          });
-          
-          // Update diary with template and ratings
-          set({
-            diary: {
-              ...diary,
-              content: template,
-              ratings: initialRatings
-            }
-          });
-        }
-      },
+      // 移除 initDiary 函数
     }),
     {
       name: 'todo-app-storage-v2',
@@ -348,6 +347,7 @@ export const useTodoStore = create<AppState>()(
           editingTodoId: state.editingTodoId,
           editingType: state.editingType,
           editingGroupId: state.editingGroupId,
+          lastSaved: state.lastSaved,
         };
       },
       onRehydrateStorage: () => {

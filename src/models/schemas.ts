@@ -35,7 +35,7 @@ export const habitGroupSchema = yup.object().shape({
 
 export const diarySchema = yup.object().shape({
   date: yup.string().required().matches(/^\d{4}-\d{2}-\d{2}$/),
-  content: yup.string().required(),
+  content: yup.string().default(''), // Make content optional with default empty string
   ratings: yup
     .object()
     .test('max-dimensions', 'Maximum 5 rating dimensions', (obj) => Object.keys(obj || {}).length <= 5)
@@ -50,4 +50,5 @@ export const diarySchema = yup.object().shape({
         );
       }
     ),
+  weather: yup.string().optional()
 });

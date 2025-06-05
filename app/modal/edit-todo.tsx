@@ -5,7 +5,7 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
-import { Habit, HabitPeriod } from '../../src/models/types';
+import { showAlert } from '../../src/utils/alertUtils';
 
 export default function EditTodoModal() {
   const router = useRouter();
@@ -112,7 +112,7 @@ export default function EditTodoModal() {
 
   const handleSave = () => {
     if (!content.trim()) {
-      Alert.alert('错误', '内容不能为空');
+      showAlert('错误', '内容不能为空');
       return;
     }
 
@@ -120,25 +120,25 @@ export default function EditTodoModal() {
       const now = new Date();
       const selected = new Date(dueDate);
       if (selected <= now) {
-        Alert.alert('错误', '截止时间必须晚于当前时间');
+        showAlert('错误', '截止时间必须晚于当前时间');
         return;
       }
     }
 
     if (hasTomatoTime && (!tomatoTime || parseInt(tomatoTime) < 1)) {
-      Alert.alert('错误', '番茄时间必须大于0');
+      showAlert('错误', '番茄时间必须大于0');
       return;
     }
 
     if (hasTargetCount && (!targetCount || parseInt(targetCount) < 1)) {
-      Alert.alert('错误', '目标次数必须大于0');
+      showAlert('错误', '目标次数必须大于0');
       return;
     }
 
     if (editingType === 'habit') {
       // Make sure we have a valid group ID
       if (!editingGroupId) {
-        Alert.alert('错误', '未指定习惯组');
+        showAlert('错误', '未指定习惯组');
         return;
       }
 

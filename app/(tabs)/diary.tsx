@@ -1,24 +1,44 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { Diary } from '../../src/models/types';
 import StarRating from '../../src/components/StarRating';
+import { showAlert } from '../../src/utils/alertUtils';
+import { generateDiaryTemplate } from '../../src/utils/diaryUtils';
 
 export default function DiaryScreen() {
-  const { diary, settings, setDiary, initDiary } = useTodoStore();
+  const { diary, settings, setDiary, lastSaved } = useTodoStore();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialRender = useRef(true);
   const prevDiaryRef = useRef<Diary | null>(null);
   
-  // Initialize diary content with template
+  // 初始化日记内容
   useEffect(() => {
-    if (isInitialRender.current) {
-      initDiary();
-      isInitialRender.current = false;
-    }
-  }, [initDiary]);
+    if (diary.content === '') {
+      // 如果日记内容为空，则生成模板内容
+        const today = new Date().toISOString().split('T')[0];
+        const { content, ratings } = generateDiaryTemplate(
+          settings.diary.diaryTemplate,
+          today,
+          diary.weather,
+          settings.diary.customDiaryTags
+        );
+        
+        // 保留现有评分，添加新的评分
+        const mergedRatings = {
+          ...ratings,
+          ...diary.ratings
+        };
+        
+        setDiary({
+          ...diary,
+          content,
+          ratings: mergedRatings
+        });
+      }
+  }, [diary, settings, setDiary]);
   
   // Auto-save function
   const autoSave = useCallback(() => {
@@ -30,13 +50,12 @@ export default function DiaryScreen() {
       
       if (hasContentChanged || hasRatingsChanged) {
         setDiary({
-          ...diary,
-          lastSaved: new Date().toISOString()
+          ...diary
         });
         console.log('Auto-saved diary at', new Date().toLocaleTimeString());
         
         // Update the previous diary reference
-        prevDiaryRef.current = { ...diary, lastSaved: new Date().toISOString() };
+        prevDiaryRef.current = { ...diary };
       }
     } catch (error) {
       console.error('Auto-save failed:', error);
@@ -94,13 +113,12 @@ export default function DiaryScreen() {
   const handleSave = () => {
     try {
       setDiary({
-        ...diary,
-        lastSaved: new Date().toISOString()
+        ...diary
       });
-      Alert.alert('保存成功', '日记已保存');
+      showAlert('保存成功', '日记已保存');
     } catch (error) {
       console.error('保存日记失败:', error);
-      Alert.alert('保存失败', '请检查输入内容是否正确');
+      showAlert('保存失败', '请检查输入内容是否正确');
     }
   };
   
@@ -114,6 +132,7 @@ export default function DiaryScreen() {
   const handleRatingChange = (tag: string, value: number) => {
     setDiary({
       ...diary,
+      content: diary.content || '', // Ensure content is never undefined
       ratings: {
         ...diary.ratings,
         [tag]: value
@@ -126,6 +145,7 @@ export default function DiaryScreen() {
     if (!isNaN(value) && value >= 0 && value <= 5) {
       setDiary({
         ...diary,
+        content: diary.content || '', // Ensure content is never undefined
         ratings: {
           ...diary.ratings,
           [tag]: value
@@ -135,8 +155,8 @@ export default function DiaryScreen() {
   };
   
   // Format the last saved time for display
-  const formattedLastSaved = diary.lastSaved 
-    ? new Date(diary.lastSaved).toLocaleTimeString() 
+  const formattedLastSaved = lastSaved 
+    ? new Date(lastSaved).toLocaleTimeString() 
     : '未保存';
   
   return (

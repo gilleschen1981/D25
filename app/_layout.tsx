@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import { useTodoStore } from '../src/store/useTodoStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -44,6 +45,34 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { lastSaved, daychange } = useTodoStore();
+
+  // 检查日期变更
+  useEffect(() => {
+    const checkDateChange = async () => {
+      if (!lastSaved) return;
+      
+      const today = new Date();
+      const lastSavedDate = new Date(lastSaved);
+      
+      // 检查是否是不同的日期（忽略时间部分）
+      const todayStr = today.toISOString().split('T')[0];
+      const lastSavedStr = lastSavedDate.toISOString().split('T')[0];
+      
+      // 如果当前日期比上次保存的日期晚，执行日期变更
+      if (todayStr !== lastSavedStr && today > lastSavedDate) {
+        console.log('检测到日期变更，从', lastSavedStr, '到', todayStr);
+        try {
+          await daychange();
+          console.log('日期变更操作完成');
+        } catch (error) {
+          console.error('日期变更操作失败:', error);
+        }
+      }
+    };
+    
+    checkDateChange();
+  }, [lastSaved, daychange]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

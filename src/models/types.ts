@@ -35,7 +35,6 @@ export interface Diary {
   content: string;
   ratings: Record<string, number>; // dimension: rating
   weather?: string;
-  lastSaved?: string; // ISO timestamp of last save
 }
 
 export interface Settings {
@@ -62,6 +61,7 @@ export interface AppStateProps {
   editingTodoId: string | null;
   editingType: 'todo' | 'habit' | null;
   editingGroupId: string | null;
+  lastSaved?: string; // ISO timestamp of last save
 }
 
 // Action methods
@@ -86,7 +86,6 @@ export interface AppState extends AppStateProps {
   setDiary: (diary: Diary) => void;
   updateSettings: (updates: Partial<Settings>) => void;
   daychange: () => Promise<void>;
-  initDiary: () => void;
 }
 
 // Locale configuration
