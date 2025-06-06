@@ -16,7 +16,10 @@ export const zh = {
     title: '待办事项',
     addNew: '添加新待办',
     editTitle: '编辑待办',
-    deleteConfirm: '确定要删除这个待办事项吗？'
+    deleteTitle: '删除待办事项',
+    deleteConfirm: '确定要删除"{{content}}"吗？',
+    dueDate: '截至',
+    start: '开始'
   },
   habit: {
     title: '习惯',

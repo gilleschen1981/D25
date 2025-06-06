@@ -6,7 +6,8 @@ import { useTodoStore } from '../../src/store/useTodoStore';
 import { Todo } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { CommonStyles } from '../../src/constants/styles';
-import { Strings } from '../../src/constants/strings';
+import i18n from '../../src/i18n';
+import { showAlert } from '../../src/utils/alertUtils';
 
 function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveSwipeable }: {
   item: Todo;
@@ -31,30 +32,22 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
       onPress={() => {
         console.log('Delete button pressed for item:', item.id);
         const showDeleteConfirmation = () => {
-          if (Platform.OS === 'web') {
-            if (window.confirm(`确定要删除"${item.content}"吗？`)) {
-              confirmDelete();
-            } else {
-              cancelDelete();
-            }
-          } else {
-            Alert.alert(
-              '删除待办事项',
-              `确定要删除"${item.content}"吗？`,
-              [
-                {
-                  text: '取消',
-                  style: 'cancel',
-                  onPress: cancelDelete
-                },
-                {
-                  text: '删除',
-                  style: 'destructive',
-                  onPress: confirmDelete
-                }
-              ]
-            );
-          }
+          showAlert(
+            i18n.t('todo.deleteTitle'),
+            i18n.t('todo.deleteConfirm', { content: item.content }),
+            [
+              {
+                text: i18n.t('common.cancel'),
+                style: 'cancel',
+                onPress: cancelDelete
+              },
+              {
+                text: i18n.t('common.delete'),
+                style: 'destructive',
+                onPress: confirmDelete
+              }
+            ]
+          );
         };
 
         const confirmDelete = () => {
@@ -101,17 +94,17 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
           </View>
           
           <View style={CommonStyles.dueDateContainer}>
-            <Text style={CommonStyles.dueDateLabel}>截至</Text>
+            <Text style={CommonStyles.dueDateLabel}>{i18n.t('todo.dueDate')}</Text>
             <Text style={CommonStyles.dueDateValue}>
               {item.dueDate ? 
-                `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${Strings.common.minutes}` : 
+                `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${i18n.t('common.minutes')}` : 
                 '-'}
             </Text>
           </View>
 
           <View style={CommonStyles.tomatoTimeContainer}>
             <Text style={CommonStyles.tomatoTimeText}>
-              {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
+              {item.tomatoTime ? `${item.tomatoTime}${i18n.t('common.minutes')}` : '-'}
             </Text>
           </View>
 
@@ -131,7 +124,7 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
             onPress={() => item.status !== 'done' && onStartPress(item)}
             disabled={item.status === 'done'}
           >
-            <Text style={CommonStyles.startButtonText}>开始</Text>
+            <Text style={CommonStyles.startButtonText}>{i18n.t('todo.start')}</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       </Swipeable>
@@ -192,7 +185,7 @@ export default function TodoScreen() {
     <View style={CommonStyles.container}>
       <Stack.Screen 
         options={{ 
-          title: '待办事项',
+          title: i18n.t('todo.title'),
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TouchableOpacity 

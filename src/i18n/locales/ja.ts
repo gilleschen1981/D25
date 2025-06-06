@@ -16,7 +16,10 @@ export const ja = {
     title: 'タスク',
     addNew: '新しいタスクを追加',
     editTitle: 'タスクを編集',
-    deleteConfirm: 'このタスクを削除してもよろしいですか？'
+    deleteTitle: 'タスクを削除',
+    deleteConfirm: '"{{content}}"を削除してもよろしいですか？',
+    dueDate: '期限',
+    start: '開始'
   },
   habit: {
     title: '習慣',

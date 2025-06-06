@@ -16,7 +16,10 @@ export const en = {
     title: 'Todo',
     addNew: 'Add New Todo',
     editTitle: 'Edit Todo',
-    deleteConfirm: 'Are you sure you want to delete this todo?'
+    deleteTitle: 'Delete Todo',
+    deleteConfirm: 'Are you sure you want to delete "{{content}}"?',
+    dueDate: 'Due',
+    start: 'Start'
   },
   habit: {
     title: 'Habits',
