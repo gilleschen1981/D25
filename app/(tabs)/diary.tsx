@@ -12,10 +12,17 @@ import i18n from '../../src/i18n';
 
 export default function DiaryScreen() {
   const { diary, settings, setDiary, lastSaved } = useTodoStore();
+  const currentLanguage = useTodoStore(state => state.settings.general.language);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialRender = useRef(true);
   const prevDiaryRef = useRef<Diary | null>(null);
-  
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // 监听语言变化，强制组件重新渲染
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [currentLanguage]);
+
   // 初始化日记内容
   useEffect(() => {
     if (diary.content === '') {

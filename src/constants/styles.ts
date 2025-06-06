@@ -716,5 +716,41 @@ export const CommonStyles = StyleSheet.create({
     borderRadius: 4,
     padding: 8,
     flex: 1,
+  },
+
+  // 语言选择器容器
+  languageSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flex: 1,
+    marginLeft: 16,
+  },
+
+  // 语言选项
+  languageOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+
+  // 选中的语言选项
+  selectedLanguage: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+
+  // 语言文本
+  languageText: {
+    fontSize: 14,
+    color: Colors.text.primary,
+  },
+
+  // 选中的语言文本
+  selectedLanguageText: {
+    color: 'white',
   }
 });

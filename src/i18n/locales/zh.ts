@@ -99,7 +99,12 @@ export const zh = {
     resetData: '重置应用数据',
     resetConfirm: '重置确认',
     resetConfirmMessage: '确定要重置所有应用数据吗？此操作不可撤销。',
-    confirmReset: '确定重置'
+    confirmReset: '确定重置',
+    languages: {
+      zh: '简体中文',
+      en: 'English',
+      ja: '日本語'
+    }
   },
   editTodo: {
     editHabit: '编辑习惯',

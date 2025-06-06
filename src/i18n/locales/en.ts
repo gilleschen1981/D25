@@ -99,7 +99,12 @@ export const en = {
     resetData: 'Reset App Data',
     resetConfirm: 'Reset Confirmation',
     resetConfirmMessage: 'Are you sure you want to reset all app data? This action cannot be undone.',
-    confirmReset: 'Confirm Reset'
+    confirmReset: 'Confirm Reset',
+    languages: {
+      zh: '简体中文',
+      en: 'English',
+      ja: '日本語'
+    }
   },
   editTodo: {
     editHabit: 'Edit Habit',

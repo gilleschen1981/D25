@@ -20,7 +20,8 @@ const initialState: AppStateProps = {
     general: {
       soundEnabled: true,
       reminderEnabled: false,
-      remindBefore: 5
+      remindBefore: 5,
+      language: 'zh' as const
     },
     todo: {
       defaultTomatoTime: 25

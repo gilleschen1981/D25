@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTodoStore } from '../../src/store/useTodoStore';
@@ -6,6 +6,13 @@ import i18n from '../../src/i18n';
 
 export default function TabLayout() {
   const { lastSaved, daychange } = useTodoStore();
+  const currentLanguage = useTodoStore(state => state.settings.general.language);
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // 监听语言变化，强制组件重新渲染
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [currentLanguage]);
 
   // 检查日期变更
   useEffect(() => {

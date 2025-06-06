@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, Platform, Modal, TextInput } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
@@ -177,7 +177,9 @@ export default function HabitScreen() {
   // Use more specific selectors to prevent unnecessary re-renders
   const habitGroups = useTodoStore(state => state.habitGroups);
   const addHabitGroup = useTodoStore(state => state.addHabitGroup);
+  const currentLanguage = useTodoStore(state => state.settings.general.language);
   const [activeSwipeable, setActiveSwipeable] = useState<Swipeable | null>(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupPeriod, setNewGroupPeriod] = useState<HabitPeriod>('daily');
@@ -192,9 +194,14 @@ export default function HabitScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   
+  // 监听语言变化，强制组件重新渲染
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [currentLanguage]);
+
   // 使用memo缓存派生状态以防止不必要的重新计算
-  const allHabits = useMemo(() => 
-    habitGroups.flatMap(group => group.habits), 
+  const allHabits = useMemo(() =>
+    habitGroups.flatMap(group => group.habits),
     [habitGroups]
   );
   

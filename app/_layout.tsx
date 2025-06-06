@@ -5,7 +5,7 @@ import { SplashScreen, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { useTodoStore } from '../src/store/useTodoStore';
-import '../src/i18n'; // 导入i18n配置
+import { changeLanguage } from '../src/i18n'; // 导入i18n配置
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -46,7 +46,12 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { lastSaved, daychange } = useTodoStore();
+  const { lastSaved, daychange, settings } = useTodoStore();
+
+  // 初始化语言设置
+  useEffect(() => {
+    changeLanguage(settings.general.language);
+  }, [settings.general.language]);
 
   // 检查日期变更
   useEffect(() => {

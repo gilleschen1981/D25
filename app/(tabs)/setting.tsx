@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Stack } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { CommonStyles } from '../../src/constants/styles';
 import { showAlert } from '../../src/utils/alertUtils';
-import i18n from '../../src/i18n';
+import i18n, { changeLanguage } from '../../src/i18n';
+import { Language } from '../../src/models/types';
 
 const SettingsPage = () => {
   const { settings, updateSettings, reset } = useTodoStore();
   const [localSettings, setLocalSettings] = useState(settings);
+
+  // 当语言设置改变时，更新i18n语言
+  useEffect(() => {
+    changeLanguage(localSettings.general.language);
+  }, [localSettings.general.language]);
 
   const handleReset = () => {
     showAlert(
@@ -93,13 +99,36 @@ const SettingsPage = () => {
               onChangeText={(text) => handleChange('general', 'remindBefore', parseInt(text) || 0)}
             />
           </View>
+
+          <View style={CommonStyles.settingRow}>
+            <Text style={CommonStyles.settingLabel}>{i18n.t('settings.language')}</Text>
+            <View style={CommonStyles.languageSelector}>
+              {(['zh', 'en', 'ja'] as Language[]).map(lang => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[
+                    CommonStyles.languageOption,
+                    localSettings.general.language === lang && CommonStyles.selectedLanguage
+                  ]}
+                  onPress={() => handleChange('general', 'language', lang)}
+                >
+                  <Text style={[
+                    CommonStyles.languageText,
+                    localSettings.general.language === lang && CommonStyles.selectedLanguageText
+                  ]}>
+                    {i18n.t(`settings.languages.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </View>
 
         <View style={{ marginBottom: 24 }}>
-          <Text style={CommonStyles.sectionTitle}>待办设置</Text>
-          
+          <Text style={CommonStyles.sectionTitle}>{i18n.t('settings.todoSettings')}</Text>
+
           <View style={CommonStyles.settingRow}>
-            <Text style={CommonStyles.settingLabel}>Default Tomato Time (minutes)</Text>
+            <Text style={CommonStyles.settingLabel}>{i18n.t('settings.defaultTomatoTime')}</Text>
             <TextInput
               style={CommonStyles.numberInput}
               keyboardType="numeric"
@@ -110,10 +139,10 @@ const SettingsPage = () => {
         </View>
 
         <View style={{ marginBottom: 24 }}>
-          <Text style={CommonStyles.sectionTitle}>日记设置</Text>
-          
+          <Text style={CommonStyles.sectionTitle}>{i18n.t('settings.diarySettings')}</Text>
+
           <View style={CommonStyles.settingRow}>
-            <Text style={CommonStyles.settingLabel}>Diary Template</Text>
+            <Text style={CommonStyles.settingLabel}>{i18n.t('settings.diaryTemplate')}</Text>
             <TextInput
               style={CommonStyles.textInput}
               multiline
@@ -123,7 +152,7 @@ const SettingsPage = () => {
           </View>
 
           <View style={CommonStyles.settingRow}>
-            <Text style={CommonStyles.settingLabel}>Custom Diary Tags</Text>
+            <Text style={CommonStyles.settingLabel}>{i18n.t('settings.customDiaryTags')}</Text>
             <View style={CommonStyles.tagsContainer}>
               {localSettings.diary.customDiaryTags.map((tag, index) => (
                 <View key={index} style={CommonStyles.tagRow}>
@@ -138,17 +167,17 @@ const SettingsPage = () => {
                 </View>
               ))}
               <Text style={CommonStyles.addTag} onPress={addTag}>
-                + Add Tag
+                {i18n.t('settings.addTag')}
               </Text>
             </View>
           </View>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[CommonStyles.button, { marginTop: 20, marginBottom: 40 }]}
           onPress={handleReset}
         >
-          <Text style={CommonStyles.buttonText}>重置应用数据</Text>
+          <Text style={CommonStyles.buttonText}>{i18n.t('settings.resetData')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

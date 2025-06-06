@@ -99,7 +99,12 @@ export const ja = {
     resetData: 'アプリデータをリセット',
     resetConfirm: 'リセット確認',
     resetConfirmMessage: 'すべてのアプリデータをリセットしてもよろしいですか？この操作は元に戻せません。',
-    confirmReset: 'リセット確認'
+    confirmReset: 'リセット確認',
+    languages: {
+      zh: '简体中文',
+      en: 'English',
+      ja: '日本語'
+    }
   },
   editTodo: {
     editHabit: '習慣を編集',

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, Platform } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
@@ -134,7 +134,14 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
 export default function TodoScreen() {
   const router = useRouter();
   const { todos, updateTodo } = useTodoStore();
+  const currentLanguage = useTodoStore(state => state.settings.general.language);
   const [activeSwipeable, setActiveSwipeable] = useState<Swipeable | null>(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // 监听语言变化，强制组件重新渲染
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [currentLanguage]);
 
   // Sort todos according to requirements
   const sortedTodos = [...todos].sort((a, b) => {

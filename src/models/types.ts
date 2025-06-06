@@ -37,11 +37,14 @@ export interface Diary {
   weather?: string;
 }
 
+export type Language = 'zh' | 'ja' | 'en';
+
 export interface Settings {
   general: {
     soundEnabled: boolean;
     reminderEnabled: boolean;
     remindBefore: number;
+    language: Language;
   };
   todo: {
     defaultTomatoTime: number;

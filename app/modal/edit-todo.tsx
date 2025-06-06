@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch, TouchableOpacity, Alert, Button, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
@@ -7,21 +7,30 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 import { showAlert } from '../../src/utils/alertUtils';
 import { CommonStyles } from '../../src/constants/styles';
+import i18n from '../../src/i18n';
 
 export default function EditTodoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { 
-    todos, 
-    habitGroups, 
-    addTodo, 
-    updateTodo, 
-    addHabit, 
-    updateHabit, 
-    editingTodoId, 
-    editingType, 
-    editingGroupId 
+  const {
+    todos,
+    habitGroups,
+    addTodo,
+    updateTodo,
+    addHabit,
+    updateHabit,
+    editingTodoId,
+    editingType,
+    editingGroupId
   } = useTodoStore();
+
+  const currentLanguage = useTodoStore(state => state.settings.general.language);
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // 监听语言变化，强制组件重新渲染
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [currentLanguage]);
 
   // Get the item if editing
   let existingItem = null;
@@ -113,7 +122,7 @@ export default function EditTodoScreen() {
 
   const handleSave = () => {
     if (!content.trim()) {
-      showAlert('错误', '内容不能为空');
+      showAlert(i18n.t('common.error'), i18n.t('editTodo.errors.contentEmpty'));
       return;
     }
 
@@ -121,25 +130,25 @@ export default function EditTodoScreen() {
       const now = new Date();
       const selected = new Date(dueDate);
       if (selected <= now) {
-        showAlert('错误', '截止时间必须晚于当前时间');
+        showAlert(i18n.t('common.error'), i18n.t('editTodo.errors.dueDatePast'));
         return;
       }
     }
 
     if (hasTomatoTime && (!tomatoTime || parseInt(tomatoTime) < 1)) {
-      showAlert('错误', '番茄时间必须大于0');
+      showAlert(i18n.t('common.error'), i18n.t('editTodo.errors.tomatoTimeInvalid'));
       return;
     }
 
     if (hasTargetCount && (!targetCount || parseInt(targetCount) < 1)) {
-      showAlert('错误', '目标次数必须大于0');
+      showAlert(i18n.t('common.error'), i18n.t('editTodo.errors.targetCountInvalid'));
       return;
     }
 
     if (editingType === 'habit') {
       // Make sure we have a valid group ID
       if (!editingGroupId) {
-        showAlert('错误', '未指定习惯组');
+        showAlert(i18n.t('common.error'), i18n.t('editTodo.errors.groupNotSpecified'));
         return;
       }
 
@@ -182,15 +191,15 @@ export default function EditTodoScreen() {
 
   return (
     <View style={CommonStyles.container}>
-      <Stack.Screen options={{ 
-        title: existingItem 
-          ? (editingType === 'habit' ? '编辑习惯' : '编辑待办事项')
-          : (editingType === 'habit' ? '新建习惯' : '新建待办事项') 
+      <Stack.Screen options={{
+        title: existingItem
+          ? (editingType === 'habit' ? i18n.t('editTodo.editHabit') : i18n.t('editTodo.editTodo'))
+          : (editingType === 'habit' ? i18n.t('editTodo.newHabit') : i18n.t('editTodo.newTodo'))
       }} />
 
       <TextInput
         style={CommonStyles.contentInput}
-        placeholder="输入待办事项内容"
+        placeholder={i18n.t('editTodo.inputContent')}
         value={content}
         onChangeText={setContent}
         multiline
@@ -200,7 +209,7 @@ export default function EditTodoScreen() {
       {editingType !== 'habit' && (
         <View style={CommonStyles.section}>
           <View style={CommonStyles.switchRow}>
-            <Text style={CommonStyles.label}>设置截止时间</Text>
+            <Text style={CommonStyles.label}>{i18n.t('editTodo.setDueDate')}</Text>
             <Switch
               value={hasDueDate}
               onValueChange={setHasDueDate}
@@ -209,8 +218,8 @@ export default function EditTodoScreen() {
           {hasDueDate && (
             <View>
               <View style={CommonStyles.dateOptionRow}>
-                <Button title="今日" onPress={setToday} />
-                <Button title="本周" onPress={setThisWeek} />
+                <Button title={i18n.t('editTodo.today')} onPress={setToday} />
+                <Button title={i18n.t('editTodo.thisWeek')} onPress={setThisWeek} />
               </View>
               {hasDueDate && (
                 Platform.OS === 'web' ? (
@@ -246,7 +255,7 @@ export default function EditTodoScreen() {
 
       <View style={CommonStyles.section}>
         <View style={CommonStyles.switchRow}>
-          <Text style={CommonStyles.label}>需要计时</Text>
+          <Text style={CommonStyles.label}>{i18n.t('editTodo.needTimer')}</Text>
           <Switch
             value={hasTomatoTime}
             onValueChange={setHasTomatoTime}
@@ -255,7 +264,7 @@ export default function EditTodoScreen() {
         {hasTomatoTime && (
           <TextInput
             style={CommonStyles.input}
-            placeholder="分钟数 (≥1)"
+            placeholder={i18n.t('editTodo.minutesPlaceholder')}
             value={tomatoTime}
             onChangeText={(text) => {
               if (/^\d*$/.test(text)) {
@@ -269,7 +278,7 @@ export default function EditTodoScreen() {
 
       <View style={CommonStyles.section}>
         <View style={CommonStyles.switchRow}>
-          <Text style={CommonStyles.label}>设置重复次数</Text>
+          <Text style={CommonStyles.label}>{i18n.t('editTodo.setRepeatCount')}</Text>
           <Switch
             value={hasTargetCount}
             onValueChange={setHasTargetCount}
@@ -278,7 +287,7 @@ export default function EditTodoScreen() {
         {hasTargetCount && (
           <TextInput
             style={CommonStyles.input}
-            placeholder="重复次数 (≥2)"
+            placeholder={i18n.t('editTodo.repeatCountPlaceholder')}
             value={targetCount}
             onChangeText={(text) => {
               if (/^\d*$/.test(text)) {
