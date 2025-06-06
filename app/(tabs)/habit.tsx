@@ -6,9 +6,10 @@ import { useTodoStore } from '../../src/store/useTodoStore';
 import { Habit, HabitPeriod } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
-import { Strings } from '../../src/constants/strings';
 import { CommonStyles } from '../../src/constants/styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import i18n from '../../src/i18n';
+import { showAlert } from '../../src/utils/alertUtils';
 
 function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onStartPress }: {
   item: Habit;
@@ -32,20 +33,22 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onS
       style={CommonStyles.deleteButton}
       onPress={() => {
         const showDeleteConfirmation = () => {
-          if (Platform.OS === 'web') {
-            if (window.confirm(`确定要删除"${item.content}"吗？`)) {
-              confirmDelete();
-            }
-          } else {
-            Alert.alert(
-              '删除习惯',
-              `确定要删除"${item.content}"吗？`,
-              [
-                { text: '取消', style: 'cancel' },
-                { text: '删除', style: 'destructive', onPress: confirmDelete }
-              ]
-            );
-          }
+          showAlert(
+            i18n.t('habit.deleteTitle'),
+            i18n.t('habit.deleteConfirm', { content: item.content }),
+            [
+              {
+                text: i18n.t('common.cancel'),
+                style: 'cancel',
+                onPress: () => swipeableRef.current?.close()
+              },
+              {
+                text: i18n.t('common.delete'),
+                style: 'destructive',
+                onPress: confirmDelete
+              }
+            ]
+          );
         };
 
         const confirmDelete = () => {
@@ -87,17 +90,17 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onS
         
         <View style={CommonStyles.infoContainer}>
           <View style={CommonStyles.dueDateContainer}>
-            <Text style={CommonStyles.dueDateLabel}>截至</Text>
+            <Text style={CommonStyles.dueDateLabel}>{i18n.t('todo.dueDate')}</Text>
             <Text style={CommonStyles.dueDateValue}>
-              {item.dueDate ? 
-                `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${Strings.common.minutes}` : 
+              {item.dueDate ?
+                `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${i18n.t('common.minutes')}` :
                 '-'}
             </Text>
           </View>
 
           <View style={CommonStyles.tomatoTimeContainer}>
             <Text style={CommonStyles.tomatoTimeText}>
-              {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
+              {item.tomatoTime ? `${item.tomatoTime}${i18n.t('common.minutes')}` : '-'}
             </Text>
           </View>
 
@@ -106,8 +109,8 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onS
               {item.targetCount ? `${item.completedCount || 0}/${item.targetCount}` : '-'}
             </Text>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[
               CommonStyles.startButton,
               item.status === 'done' && CommonStyles.disabledButton
@@ -115,7 +118,7 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onS
             onPress={() => item.status !== 'done' && onStartPress(item)}
             disabled={item.status === 'done'}
           >
-            <Text style={CommonStyles.startButtonText}>开始</Text>
+            <Text style={CommonStyles.startButtonText}>{i18n.t('todo.start')}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -141,9 +144,9 @@ function HabitGroup({ period, groupname, habits, onAddHabit, onLongPress, active
         style={CommonStyles.groupHeader}
         onPress={() => setExpanded(!expanded)}
       >
-        <Text style={CommonStyles.groupTitle}>{groupname}({period})</Text>
+        <Text style={CommonStyles.groupTitle}>{groupname}({i18n.t(`habit.periods.${period}`)})</Text>
         <View style={CommonStyles.groupHeaderRight}>
-          <Text style={CommonStyles.groupCount}>{habits.length}个</Text>
+          <Text style={CommonStyles.groupCount}>{habits.length}{i18n.t('habit.items')}</Text>
           <TouchableOpacity onPress={onAddHabit}>
             <MaterialIcons name="add" size={24} color="black" />
           </TouchableOpacity>
@@ -240,17 +243,8 @@ export default function HabitScreen() {
   }, [router]);
 
   const handleCreateGroup = () => {
-    // Helper function to show alerts that works on both web and mobile
-    const showAlert = (title: string, message: string) => {
-      if (Platform.OS === 'web') {
-        window.alert(`${title}: ${message}`);
-      } else {
-        Alert.alert(title, message);
-      }
-    };
-
     if (!newGroupName.trim()) {
-      showAlert('错误', '组名不能为空');
+      showAlert(i18n.t('common.error'), i18n.t('habit.errors.groupNameEmpty'));
       return;
     }
     
@@ -260,17 +254,17 @@ export default function HabitScreen() {
     // Set end date based on period
     if (newGroupPeriod === 'custom') {
       if (!startDate) {
-        showAlert('错误', '请选择开始日期');
+        showAlert(i18n.t('common.error'), i18n.t('habit.errors.startDateRequired'));
         return;
       }
-      
+
       if (!endDate) {
-        showAlert('错误', '请选择结束日期');
+        showAlert(i18n.t('common.error'), i18n.t('habit.errors.endDateRequired'));
         return;
       }
-      
+
       if (!frequency || frequency <= 0) {
-        showAlert('错误', '请输入有效的频率值（大于0）');
+        showAlert(i18n.t('common.error'), i18n.t('habit.errors.frequencyRequired'));
         return;
       }
       
@@ -324,7 +318,7 @@ export default function HabitScreen() {
         setFrequency(undefined);
       } catch (error) {
         console.error('Failed to create custom habit group:', error);
-        showAlert('创建失败', '请检查输入是否正确');
+        showAlert(i18n.t('habit.errors.createFailed'), i18n.t('habit.errors.checkInput'));
       }
     } else {
       // Original logic for non-custom periods
@@ -357,7 +351,7 @@ export default function HabitScreen() {
         setNewGroupName('');
       } catch (error) {
         console.error('Failed to create standard habit group:', error);
-        showAlert('创建失败', '请检查输入是否正确');
+        showAlert(i18n.t('habit.errors.createFailed'), i18n.t('habit.errors.checkInput'));
       }
     }
   };
@@ -366,12 +360,12 @@ export default function HabitScreen() {
     <View style={CommonStyles.container}>
       {habitGroups.length === 0 && (
         <View style={CommonStyles.emptyState}>
-          <Text style={CommonStyles.emptyText}>暂无习惯数据</Text>
+          <Text style={CommonStyles.emptyText}>{i18n.t('habit.noData')}</Text>
         </View>
       )}
-      <Stack.Screen 
-        options={{ 
-          title: '习惯追踪',
+      <Stack.Screen
+        options={{
+          title: i18n.t('habit.title'),
           headerRight: () => (
             <View style={{ flexDirection: 'row' }}>
               <TouchableOpacity 
@@ -418,17 +412,17 @@ export default function HabitScreen() {
       >
         <View style={CommonStyles.modalOverlay}>
           <View style={CommonStyles.modalContent}>
-            <Text style={CommonStyles.modalTitle}>创建新习惯组</Text>
-            
-            <Text style={CommonStyles.inputLabel}>组名</Text>
+            <Text style={CommonStyles.modalTitle}>{i18n.t('habit.createGroup')}</Text>
+
+            <Text style={CommonStyles.inputLabel}>{i18n.t('habit.groupName')}</Text>
             <TextInput
               style={CommonStyles.input}
               value={newGroupName}
               onChangeText={setNewGroupName}
-              placeholder="输入习惯组名称"
+              placeholder={i18n.t('habit.groupName')}
             />
-            
-            <Text style={CommonStyles.inputLabel}>周期</Text>
+
+            <Text style={CommonStyles.inputLabel}>{i18n.t('habit.period')}</Text>
             <View style={CommonStyles.periodSelector}>
               {(['daily', 'weekly', 'monthly', 'custom'] as HabitPeriod[]).map(period => (
                 <TouchableOpacity
@@ -443,9 +437,7 @@ export default function HabitScreen() {
                     CommonStyles.periodText,
                     newGroupPeriod === period && CommonStyles.selectedPeriodText
                   ]}>
-                    {period === 'daily' ? '每日' : 
-                     period === 'weekly' ? '每周' : 
-                     period === 'monthly' ? '每月' : '自定义'}
+                    {i18n.t(`habit.periods.${period}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -454,7 +446,7 @@ export default function HabitScreen() {
             {/* Custom period options */}
             {newGroupPeriod === 'custom' && (
               <>
-                <Text style={CommonStyles.inputLabel}>开始日期</Text>
+                <Text style={CommonStyles.inputLabel}>{i18n.t('habit.startDate')}</Text>
                 {Platform.OS === 'web' ? (
                   <input
                     type="date"
@@ -472,11 +464,11 @@ export default function HabitScreen() {
                   />
                 ) : (
                   <>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={CommonStyles.datePickerButton}
                       onPress={() => setShowStartDatePicker(true)}
                     >
-                      <Text>{startDate || '选择开始日期'}</Text>
+                      <Text>{startDate || i18n.t('habit.selectStartDate')}</Text>
                     </TouchableOpacity>
                     
                     {showStartDatePicker && (
@@ -494,8 +486,8 @@ export default function HabitScreen() {
                     )}
                   </>
                 )}
-                
-                <Text style={CommonStyles.inputLabel}>结束日期</Text>
+
+                <Text style={CommonStyles.inputLabel}>{i18n.t('habit.endDate')}</Text>
                 {Platform.OS === 'web' ? (
                   <input
                     type="date"
@@ -513,11 +505,11 @@ export default function HabitScreen() {
                   />
                 ) : (
                   <>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={CommonStyles.datePickerButton}
                       onPress={() => setShowEndDatePicker(true)}
                     >
-                      <Text>{endDate || '选择结束日期'}</Text>
+                      <Text>{endDate || i18n.t('habit.selectEndDate')}</Text>
                     </TouchableOpacity>
                     
                     {showEndDatePicker && (
@@ -538,7 +530,7 @@ export default function HabitScreen() {
                 
                 <View style={CommonStyles.frequencyContainer}>
                   <View style={CommonStyles.frequencyInputContainer}>
-                    <Text style={CommonStyles.inputLabel}>频率</Text>
+                    <Text style={CommonStyles.inputLabel}>{i18n.t('habit.frequency')}</Text>
                     <TextInput
                       style={CommonStyles.frequencyInput}
                       value={frequency?.toString() || ''}
@@ -549,12 +541,12 @@ export default function HabitScreen() {
                         }
                       }}
                       keyboardType="numeric"
-                      placeholder="输入数值"
+                      placeholder={i18n.t('habit.inputValue')}
                     />
                   </View>
-                  
+
                   <View style={CommonStyles.unitSelectorContainer}>
-                    <Text style={CommonStyles.inputLabel}>单位</Text>
+                    <Text style={CommonStyles.inputLabel}>{i18n.t('habit.unit')}</Text>
                     <View style={CommonStyles.unitSelector}>
                       {(['minutes', 'hours', 'days', 'weeks', 'months'] as const).map(unit => (
                         <TouchableOpacity
@@ -569,10 +561,7 @@ export default function HabitScreen() {
                             CommonStyles.unitText,
                             frequencyUnit === unit && CommonStyles.selectedUnitText
                           ]}>
-                            {unit === 'minutes' ? '分钟' : 
-                             unit === 'hours' ? '小时' : 
-                             unit === 'days' ? '天' : 
-                             unit === 'weeks' ? '周' : '月'}
+                            {i18n.t(`habit.units.${unit}`)}
                           </Text>
                         </TouchableOpacity>
                       ))}
@@ -583,14 +572,14 @@ export default function HabitScreen() {
             )}
             
             <View style={CommonStyles.modalButtons}>
-              <TouchableOpacity 
-                style={[CommonStyles.modalButton, CommonStyles.cancelButton]} 
+              <TouchableOpacity
+                style={[CommonStyles.modalButton, CommonStyles.cancelButton]}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={CommonStyles.buttonText}>取消</Text>
+                <Text style={CommonStyles.buttonText}>{i18n.t('common.cancel')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[CommonStyles.modalButton, CommonStyles.createButton]} 
+              <TouchableOpacity
+                style={[CommonStyles.modalButton, CommonStyles.createButton]}
                 onPress={() => {
                   console.log('Create button pressed');
                   console.log('Current state:', {
@@ -604,7 +593,7 @@ export default function HabitScreen() {
                   handleCreateGroup();
                 }}
               >
-                <Text style={CommonStyles.buttonText}>创建</Text>
+                <Text style={CommonStyles.buttonText}>{i18n.t('common.create')}</Text>
               </TouchableOpacity>
             </View>
           </View>

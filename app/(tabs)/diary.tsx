@@ -8,6 +8,7 @@ import StarRating from '../../src/components/StarRating';
 import { showAlert } from '../../src/utils/alertUtils';
 import { generateDiaryTemplate } from '../../src/utils/diaryUtils';
 import { CommonStyles } from '../../src/constants/styles';
+import i18n from '../../src/i18n';
 
 export default function DiaryScreen() {
   const { diary, settings, setDiary, lastSaved } = useTodoStore();
@@ -116,10 +117,10 @@ export default function DiaryScreen() {
       setDiary({
         ...diary
       });
-      showAlert('保存成功', '日记已保存');
+      showAlert(i18n.t('common.success'), i18n.t('diary.saveSuccess'));
     } catch (error) {
       console.error('保存日记失败:', error);
-      showAlert('保存失败', '请检查输入内容是否正确');
+      showAlert(i18n.t('diary.saveFailed'), i18n.t('diary.checkContent'));
     }
   };
   
@@ -156,21 +157,21 @@ export default function DiaryScreen() {
   };
   
   // Format the last saved time for display
-  const formattedLastSaved = lastSaved 
-    ? new Date(lastSaved).toLocaleTimeString() 
-    : '未保存';
+  const formattedLastSaved = lastSaved
+    ? new Date(lastSaved).toLocaleTimeString()
+    : i18n.t('diary.notSaved');
   
   return (
     <View style={[CommonStyles.container, { backgroundColor: '#F5F5DC' }]}>
-      <Stack.Screen 
-        options={{ 
-          title: '日记',
+      <Stack.Screen
+        options={{
+          title: i18n.t('diary.title'),
           headerRight: () => (
             <TouchableOpacity onPress={handleSave} style={{ paddingRight: 16 }}>
               <MaterialIcons name="check" size={28} color="#4CAF50" />
             </TouchableOpacity>
           )
-        }} 
+        }}
       />
       
       <ScrollView style={{ flex: 1 }}>
@@ -180,18 +181,18 @@ export default function DiaryScreen() {
             multiline
             value={diary.content}
             onChangeText={handleContentChange}
-            placeholder="今天的日记..."
+            placeholder={i18n.t('diary.placeholder')}
             numberOfLines={10}
             textAlignVertical="top"
           />
         </View>
         
         <View style={[CommonStyles.card, { backgroundColor: '#FFFEF0' }]}>
-          <Text style={CommonStyles.sectionTitle}>今日评价</Text>
-          
+          <Text style={CommonStyles.sectionTitle}>{i18n.t('diary.todayRating')}</Text>
+
           {/* Default rating */}
           <View style={CommonStyles.ratingItem}>
-            <Text style={CommonStyles.ratingLabel}>今日评价</Text>
+            <Text style={CommonStyles.ratingLabel}>{i18n.t('diary.todayRating')}</Text>
             <View style={CommonStyles.ratingControls}>
               <StarRating 
                 rating={diary.ratings['今日评价'] || 0} 
@@ -233,7 +234,7 @@ export default function DiaryScreen() {
         </View>
         
         <Text style={CommonStyles.lastSavedText}>
-          上次保存: {formattedLastSaved}
+          {i18n.t('diary.lastSaved')}: {formattedLastSaved}
         </Text>
       </ScrollView>
     </View>

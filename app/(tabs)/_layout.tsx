@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTodoStore } from '../../src/store/useTodoStore';
+import i18n from '../../src/i18n';
 
 export default function TabLayout() {
   const { lastSaved, daychange } = useTodoStore();
@@ -38,28 +39,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name="todo"
         options={{
-          title: '待办',
+          title: i18n.t('tabs.todo'),
           tabBarIcon: ({ color }) => <MaterialIcons name="check-box" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="habit"
         options={{
-          title: '习惯',
+          title: i18n.t('tabs.habit'),
           tabBarIcon: ({ color }) => <MaterialIcons name="repeat" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="diary"
         options={{
-          title: '日记',
+          title: i18n.t('tabs.diary'),
           tabBarIcon: ({ color }) => <MaterialIcons name="book" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="setting"
         options={{
-          title: '设置',
+          title: i18n.t('tabs.setting'),
           tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={24} color={color} />,
         }}
       />
