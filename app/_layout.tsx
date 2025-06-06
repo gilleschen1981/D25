@@ -5,6 +5,7 @@ import { SplashScreen, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { useTodoStore } from '../src/store/useTodoStore';
+import '../src/i18n'; // 导入i18n配置
 
 export {
   // Catch any errors thrown by the Layout component.
