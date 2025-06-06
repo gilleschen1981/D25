@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Platform, Modal, TextInput } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
@@ -7,6 +7,7 @@ import { Habit, HabitPeriod } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 import { Strings } from '../../src/constants/strings';
+import { CommonStyles } from '../../src/constants/styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onStartPress }: {
@@ -28,7 +29,7 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onS
 
   const renderRightActions = () => (
     <TouchableOpacity
-      style={styles.deleteButton}
+      style={CommonStyles.deleteButton}
       onPress={() => {
         const showDeleteConfirmation = () => {
           if (Platform.OS === 'web') {
@@ -74,47 +75,47 @@ function HabitItem({ item, onLongPress, activeSwipeable, setActiveSwipeable, onS
       enabled={item.status === 'pending'}
     >
       <TouchableOpacity 
-        style={[styles.habitItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
+        style={[CommonStyles.listItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
         onLongPress={() => onLongPress(item)}
       >
-        <View style={styles.contentContainer}>
+        <View style={CommonStyles.contentContainer}>
           <Text style={[
-            styles.habitTitle,
-            item.status === 'done' && styles.doneText
+            CommonStyles.itemTitle,
+            item.status === 'done' && CommonStyles.doneText
           ]}>{item.content}</Text>
         </View>
         
-        <View style={styles.infoContainer}>
-          <View style={styles.dueDateContainer}>
-            <Text style={styles.dueDateLabel}>截至</Text>
-            <Text style={styles.dueDateValue}>
+        <View style={CommonStyles.infoContainer}>
+          <View style={CommonStyles.dueDateContainer}>
+            <Text style={CommonStyles.dueDateLabel}>截至</Text>
+            <Text style={CommonStyles.dueDateValue}>
               {item.dueDate ? 
                 `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${Strings.common.minutes}` : 
                 '-'}
             </Text>
           </View>
 
-          <View style={styles.tomatoTimeContainer}>
-            <Text style={styles.tomatoTimeText}>
+          <View style={CommonStyles.tomatoTimeContainer}>
+            <Text style={CommonStyles.tomatoTimeText}>
               {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
             </Text>
           </View>
 
-          <View style={styles.countContainer}>
-            <Text style={styles.countText}>
+          <View style={CommonStyles.countContainer}>
+            <Text style={CommonStyles.countText}>
               {item.targetCount ? `${item.completedCount || 0}/${item.targetCount}` : '-'}
             </Text>
           </View>
           
           <TouchableOpacity 
             style={[
-              styles.startButton,
-              item.status === 'done' && styles.disabledButton
+              CommonStyles.startButton,
+              item.status === 'done' && CommonStyles.disabledButton
             ]}
             onPress={() => item.status !== 'done' && onStartPress(item)}
             disabled={item.status === 'done'}
           >
-            <Text style={styles.startButtonText}>开始</Text>
+            <Text style={CommonStyles.startButtonText}>开始</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -135,14 +136,14 @@ function HabitGroup({ period, groupname, habits, onAddHabit, onLongPress, active
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <View style={styles.groupContainer}>
+    <View style={CommonStyles.groupContainer}>
       <TouchableOpacity 
-        style={styles.groupHeader}
+        style={CommonStyles.groupHeader}
         onPress={() => setExpanded(!expanded)}
       >
-        <Text style={styles.groupTitle}>{groupname}({period})</Text>
-        <View style={styles.groupHeaderRight}>
-          <Text style={styles.groupCount}>{habits.length}个</Text>
+        <Text style={CommonStyles.groupTitle}>{groupname}({period})</Text>
+        <View style={CommonStyles.groupHeaderRight}>
+          <Text style={CommonStyles.groupCount}>{habits.length}个</Text>
           <TouchableOpacity onPress={onAddHabit}>
             <MaterialIcons name="add" size={24} color="black" />
           </TouchableOpacity>
@@ -188,7 +189,7 @@ export default function HabitScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   
-  // Memoize derived state to prevent unnecessary recalculations
+  // 使用memo缓存派生状态以防止不必要的重新计算
   const allHabits = useMemo(() => 
     habitGroups.flatMap(group => group.habits), 
     [habitGroups]
@@ -362,10 +363,10 @@ export default function HabitScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={CommonStyles.container}>
       {habitGroups.length === 0 && (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>暂无习惯数据</Text>
+        <View style={CommonStyles.emptyState}>
+          <Text style={CommonStyles.emptyText}>暂无习惯数据</Text>
         </View>
       )}
       <Stack.Screen 
@@ -405,7 +406,7 @@ export default function HabitScreen() {
             setActiveSwipeable={setActiveSwipeable}
           />
         )}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={CommonStyles.listContainer}
       />
       
       {/* Modal for creating new habit group */}
@@ -415,32 +416,32 @@ export default function HabitScreen() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>创建新习惯组</Text>
+        <View style={CommonStyles.modalOverlay}>
+          <View style={CommonStyles.modalContent}>
+            <Text style={CommonStyles.modalTitle}>创建新习惯组</Text>
             
-            <Text style={styles.inputLabel}>组名</Text>
+            <Text style={CommonStyles.inputLabel}>组名</Text>
             <TextInput
-              style={styles.input}
+              style={CommonStyles.input}
               value={newGroupName}
               onChangeText={setNewGroupName}
               placeholder="输入习惯组名称"
             />
             
-            <Text style={styles.inputLabel}>周期</Text>
-            <View style={styles.periodSelector}>
+            <Text style={CommonStyles.inputLabel}>周期</Text>
+            <View style={CommonStyles.periodSelector}>
               {(['daily', 'weekly', 'monthly', 'custom'] as HabitPeriod[]).map(period => (
                 <TouchableOpacity
                   key={period}
                   style={[
-                    styles.periodOption,
-                    newGroupPeriod === period && styles.selectedPeriod
+                    CommonStyles.periodOption,
+                    newGroupPeriod === period && CommonStyles.selectedPeriod
                   ]}
                   onPress={() => setNewGroupPeriod(period)}
                 >
                   <Text style={[
-                    styles.periodText,
-                    newGroupPeriod === period && styles.selectedPeriodText
+                    CommonStyles.periodText,
+                    newGroupPeriod === period && CommonStyles.selectedPeriodText
                   ]}>
                     {period === 'daily' ? '每日' : 
                      period === 'weekly' ? '每周' : 
@@ -453,7 +454,7 @@ export default function HabitScreen() {
             {/* Custom period options */}
             {newGroupPeriod === 'custom' && (
               <>
-                <Text style={styles.inputLabel}>开始日期</Text>
+                <Text style={CommonStyles.inputLabel}>开始日期</Text>
                 {Platform.OS === 'web' ? (
                   <input
                     type="date"
@@ -472,7 +473,7 @@ export default function HabitScreen() {
                 ) : (
                   <>
                     <TouchableOpacity 
-                      style={styles.datePickerButton}
+                      style={CommonStyles.datePickerButton}
                       onPress={() => setShowStartDatePicker(true)}
                     >
                       <Text>{startDate || '选择开始日期'}</Text>
@@ -494,7 +495,7 @@ export default function HabitScreen() {
                   </>
                 )}
                 
-                <Text style={styles.inputLabel}>结束日期</Text>
+                <Text style={CommonStyles.inputLabel}>结束日期</Text>
                 {Platform.OS === 'web' ? (
                   <input
                     type="date"
@@ -513,7 +514,7 @@ export default function HabitScreen() {
                 ) : (
                   <>
                     <TouchableOpacity 
-                      style={styles.datePickerButton}
+                      style={CommonStyles.datePickerButton}
                       onPress={() => setShowEndDatePicker(true)}
                     >
                       <Text>{endDate || '选择结束日期'}</Text>
@@ -535,11 +536,11 @@ export default function HabitScreen() {
                   </>
                 )}
                 
-                <View style={styles.frequencyContainer}>
-                  <View style={styles.frequencyInputContainer}>
-                    <Text style={styles.inputLabel}>频率</Text>
+                <View style={CommonStyles.frequencyContainer}>
+                  <View style={CommonStyles.frequencyInputContainer}>
+                    <Text style={CommonStyles.inputLabel}>频率</Text>
                     <TextInput
-                      style={styles.frequencyInput}
+                      style={CommonStyles.frequencyInput}
                       value={frequency?.toString() || ''}
                       onChangeText={(text) => {
                         const num = parseInt(text);
@@ -552,21 +553,21 @@ export default function HabitScreen() {
                     />
                   </View>
                   
-                  <View style={styles.unitSelectorContainer}>
-                    <Text style={styles.inputLabel}>单位</Text>
-                    <View style={styles.unitSelector}>
+                  <View style={CommonStyles.unitSelectorContainer}>
+                    <Text style={CommonStyles.inputLabel}>单位</Text>
+                    <View style={CommonStyles.unitSelector}>
                       {(['minutes', 'hours', 'days', 'weeks', 'months'] as const).map(unit => (
                         <TouchableOpacity
                           key={unit}
                           style={[
-                            styles.unitOption,
-                            frequencyUnit === unit && styles.selectedUnit
+                            CommonStyles.unitOption,
+                            frequencyUnit === unit && CommonStyles.selectedUnit
                           ]}
                           onPress={() => setFrequencyUnit(unit)}
                         >
                           <Text style={[
-                            styles.unitText,
-                            frequencyUnit === unit && styles.selectedUnitText
+                            CommonStyles.unitText,
+                            frequencyUnit === unit && CommonStyles.selectedUnitText
                           ]}>
                             {unit === 'minutes' ? '分钟' : 
                              unit === 'hours' ? '小时' : 
@@ -581,15 +582,15 @@ export default function HabitScreen() {
               </>
             )}
             
-            <View style={styles.modalButtons}>
+            <View style={CommonStyles.modalButtons}>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
+                style={[CommonStyles.modalButton, CommonStyles.cancelButton]} 
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.buttonText}>取消</Text>
+                <Text style={CommonStyles.buttonText}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.createButton]} 
+                style={[CommonStyles.modalButton, CommonStyles.createButton]} 
                 onPress={() => {
                   console.log('Create button pressed');
                   console.log('Current state:', {
@@ -603,7 +604,7 @@ export default function HabitScreen() {
                   handleCreateGroup();
                 }}
               >
-                <Text style={styles.buttonText}>创建</Text>
+                <Text style={CommonStyles.buttonText}>创建</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -613,267 +614,4 @@ export default function HabitScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  listContainer: {
-    padding: 16,
-  },
-  groupContainer: {
-    marginBottom: 16,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  groupHeaderRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  groupTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  groupCount: {
-    fontSize: 14,
-    color: '#666',
-  },
-  habitItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  contentContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  habitTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  habitProgress: {
-    fontSize: 14,
-    color: '#666',
-  },
-  deleteButton: {
-    backgroundColor: '#F44336',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: '85%',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  inputLabel: {
-    fontSize: 16,
-    marginBottom: 5,
-    fontWeight: '500',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-  },
-  periodSelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  periodOption: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    margin: 5,
-  },
-  selectedPeriod: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  periodText: {
-    color: '#333',
-  },
-  selectedPeriodText: {
-    color: 'white',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-  },
-  createButton: {
-    backgroundColor: '#007AFF',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  infoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dueDateContainer: {
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  dueDateLabel: {
-    fontSize: 10,
-    color: '#666',
-  },
-  dueDateValue: {
-    fontSize: 12,
-    color: '#666',
-  },
-  tomatoTimeContainer: {
-    width: 60,
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  tomatoTimeText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  countContainer: {
-    width: 60,
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  countText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  startButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  doneText: {
-    textDecorationLine: 'line-through',
-    color: '#999',
-  },
-  disabledButton: {
-    backgroundColor: '#cccccc',
-  },
-  frequencyContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  frequencyInputContainer: {
-    flex: 1,
-    marginRight: 10,
-  },
-  frequencyInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-  },
-  unitSelectorContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  unitSelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  unitOption: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 8,
-    margin: 2,
-  },
-  selectedUnit: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  unitText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  selectedUnitText: {
-    color: 'white',
-  },
-  datePickerContainer: {
-    marginBottom: 15,
-  },
-  datePickerButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-  },
-});
+// 删除本地styles定义，使用CommonStyles

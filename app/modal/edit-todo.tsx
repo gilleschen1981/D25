@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, Button, Platform } from 'react-native';
+import { View, Text, TextInput, Switch, TouchableOpacity, Alert, Button, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { generateRandomLightColor } from '../../src/constants/colors';
 import { showAlert } from '../../src/utils/alertUtils';
+import { CommonStyles } from '../../src/constants/styles';
 
-export default function EditTodoModal() {
+export default function EditTodoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { 
@@ -180,7 +181,7 @@ export default function EditTodoModal() {
   };
 
   return (
-    <View style={[styles.container]}>
+    <View style={CommonStyles.container}>
       <Stack.Screen options={{ 
         title: existingItem 
           ? (editingType === 'habit' ? '编辑习惯' : '编辑待办事项')
@@ -188,7 +189,7 @@ export default function EditTodoModal() {
       }} />
 
       <TextInput
-        style={styles.contentInput}
+        style={CommonStyles.contentInput}
         placeholder="输入待办事项内容"
         value={content}
         onChangeText={setContent}
@@ -197,9 +198,9 @@ export default function EditTodoModal() {
       />
 
       {editingType !== 'habit' && (
-        <View style={styles.section}>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>设置截止时间</Text>
+        <View style={CommonStyles.section}>
+          <View style={CommonStyles.switchRow}>
+            <Text style={CommonStyles.label}>设置截止时间</Text>
             <Switch
               value={hasDueDate}
               onValueChange={setHasDueDate}
@@ -207,7 +208,7 @@ export default function EditTodoModal() {
           </View>
           {hasDueDate && (
             <View>
-              <View style={styles.dateOptionRow}>
+              <View style={CommonStyles.dateOptionRow}>
                 <Button title="今日" onPress={setToday} />
                 <Button title="本周" onPress={setThisWeek} />
               </View>
@@ -243,9 +244,9 @@ export default function EditTodoModal() {
         </View>
       )}
 
-      <View style={styles.section}>
-        <View style={styles.switchRow}>
-          <Text style={styles.label}>需要计时</Text>
+      <View style={CommonStyles.section}>
+        <View style={CommonStyles.switchRow}>
+          <Text style={CommonStyles.label}>需要计时</Text>
           <Switch
             value={hasTomatoTime}
             onValueChange={setHasTomatoTime}
@@ -253,7 +254,7 @@ export default function EditTodoModal() {
         </View>
         {hasTomatoTime && (
           <TextInput
-            style={styles.input}
+            style={CommonStyles.input}
             placeholder="分钟数 (≥1)"
             value={tomatoTime}
             onChangeText={(text) => {
@@ -266,9 +267,9 @@ export default function EditTodoModal() {
         )}
       </View>
 
-      <View style={styles.section}>
-        <View style={styles.switchRow}>
-          <Text style={styles.label}>设置重复次数</Text>
+      <View style={CommonStyles.section}>
+        <View style={CommonStyles.switchRow}>
+          <Text style={CommonStyles.label}>设置重复次数</Text>
           <Switch
             value={hasTargetCount}
             onValueChange={setHasTargetCount}
@@ -276,7 +277,7 @@ export default function EditTodoModal() {
         </View>
         {hasTargetCount && (
           <TextInput
-            style={styles.input}
+            style={CommonStyles.input}
             placeholder="重复次数 (≥2)"
             value={targetCount}
             onChangeText={(text) => {
@@ -289,11 +290,11 @@ export default function EditTodoModal() {
         )}
       </View>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+      <View style={CommonStyles.buttonRow}>
+        <TouchableOpacity style={CommonStyles.cancelButton} onPress={handleCancel}>
           <MaterialIcons name="close" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+        <TouchableOpacity style={CommonStyles.saveButton} onPress={handleSave}>
           <MaterialIcons name="check" size={24} color="white" />
         </TouchableOpacity>
       </View>
@@ -301,65 +302,4 @@ export default function EditTodoModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  contentInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 20,
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  label: {
-    fontSize: 18,
-  },
-  input: {
-    fontSize: 16,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  dateOptionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 30,
-  },
-  saveButton: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 50,
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#F44336',
-    padding: 15,
-    borderRadius: 50,
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+// 删除本地styles定义，使用CommonStyles

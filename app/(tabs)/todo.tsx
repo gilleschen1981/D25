@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Platform } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { Todo } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
-import { generateRandomLightColor } from '../../src/constants/colors';
+import { CommonStyles } from '../../src/constants/styles';
 import { Strings } from '../../src/constants/strings';
 
 function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveSwipeable }: {
@@ -27,7 +27,7 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
 
   const renderRightActions = () => (
     <TouchableOpacity
-      style={styles.deleteButton}
+      style={CommonStyles.deleteButton}
       onPress={() => {
         console.log('Delete button pressed for item:', item.id);
         const showDeleteConfirmation = () => {
@@ -90,34 +90,34 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
         enabled={item.status === 'pending'}
       >
         <TouchableOpacity 
-        style={[styles.todoItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
+        style={[CommonStyles.listItem, { backgroundColor: item.backgroundColor || '#ffffff' }]}
           onLongPress={() => onLongPress(item)}
         >
-          <View style={styles.contentContainer}>
+          <View style={CommonStyles.contentContainer}>
             <Text style={[
-              styles.todoTitle,
-              item.status === 'done' && styles.doneText
+              CommonStyles.itemTitle,
+              item.status === 'done' && CommonStyles.doneText
             ]}>{item.content}</Text>
           </View>
           
-          <View style={styles.dueDateContainer}>
-            <Text style={styles.dueDateLabel}>截至</Text>
-            <Text style={styles.dueDateValue}>
+          <View style={CommonStyles.dueDateContainer}>
+            <Text style={CommonStyles.dueDateLabel}>截至</Text>
+            <Text style={CommonStyles.dueDateValue}>
               {item.dueDate ? 
                 `${Math.floor((new Date(item.dueDate).getTime() - Date.now()) / 60000)}${Strings.common.minutes}` : 
                 '-'}
             </Text>
           </View>
 
-          <View style={styles.tomatoTimeContainer}>
-            <Text style={styles.tomatoTimeText}>
+          <View style={CommonStyles.tomatoTimeContainer}>
+            <Text style={CommonStyles.tomatoTimeText}>
               {item.tomatoTime ? `${item.tomatoTime}${Strings.common.minutes}` : '-'}
             </Text>
           </View>
 
-          <View style={styles.countContainer}>
+          <View style={CommonStyles.countContainer}>
             {item.targetCount && item.targetCount > 1 ? (
-              <Text style={styles.countText}>
+              <Text style={CommonStyles.countText}>
                 {item.completedCount || 0}/{item.targetCount}
               </Text>
             ) : null}
@@ -125,13 +125,13 @@ function TodoItem({ item, onLongPress, onStartPress, activeSwipeable, setActiveS
           
           <TouchableOpacity 
             style={[
-              styles.startButton,
-              item.status === 'done' && styles.disabledButton
+              CommonStyles.startButton,
+              item.status === 'done' && CommonStyles.disabledButton
             ]}
             onPress={() => item.status !== 'done' && onStartPress(item)}
             disabled={item.status === 'done'}
           >
-            <Text style={styles.startButtonText}>开始</Text>
+            <Text style={CommonStyles.startButtonText}>开始</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       </Swipeable>
@@ -189,7 +189,7 @@ export default function TodoScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={CommonStyles.container}>
       <Stack.Screen 
         options={{ 
           title: '待办事项',
@@ -224,96 +224,8 @@ export default function TodoScreen() {
             setActiveSwipeable={setActiveSwipeable}
           />
         )}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={CommonStyles.listContainer}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  listContainer: {
-    padding: 16,
-  },
-  todoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  contentContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  dueDateContainer: {
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  dueDateLabel: {
-    fontSize: 10,
-    color: '#666',
-  },
-  dueDateValue: {
-    fontSize: 12,
-    color: '#666',
-  },
-  todoTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  tomatoTimeContainer: {
-    width: 60,
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  tomatoTimeText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  countContainer: {
-    width: 60,
-    marginRight: 16,
-    alignItems: 'center',
-  },
-  countText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  startButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  doneText: {
-    textDecorationLine: 'line-through',
-    color: '#999',
-  },
-  disabledButton: {
-    backgroundColor: '#cccccc',
-  },
-  deleteButton: {
-    backgroundColor: '#F44336',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: '85%',
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-});

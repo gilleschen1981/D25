@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, ScrollView,TouchableOpacity } from 'react-native';
 import { Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTodoStore } from '../../src/store/useTodoStore';
@@ -7,6 +7,7 @@ import { Diary } from '../../src/models/types';
 import StarRating from '../../src/components/StarRating';
 import { showAlert } from '../../src/utils/alertUtils';
 import { generateDiaryTemplate } from '../../src/utils/diaryUtils';
+import { CommonStyles } from '../../src/constants/styles';
 
 export default function DiaryScreen() {
   const { diary, settings, setDiary, lastSaved } = useTodoStore();
@@ -160,7 +161,7 @@ export default function DiaryScreen() {
     : '未保存';
   
   return (
-    <View style={styles.container}>
+    <View style={[CommonStyles.container, { backgroundColor: '#F5F5DC' }]}>
       <Stack.Screen 
         options={{ 
           title: '日记',
@@ -172,10 +173,10 @@ export default function DiaryScreen() {
         }} 
       />
       
-      <ScrollView style={styles.scrollContainer}>
-        <View style={styles.diaryContainer}>
+      <ScrollView style={{ flex: 1 }}>
+        <View style={[CommonStyles.card, CommonStyles.diaryCard]}>
           <TextInput
-            style={styles.diaryInput}
+            style={CommonStyles.diaryInput}
             multiline
             value={diary.content}
             onChangeText={handleContentChange}
@@ -185,13 +186,13 @@ export default function DiaryScreen() {
           />
         </View>
         
-        <View style={styles.ratingsContainer}>
-          <Text style={styles.ratingsTitle}>今日评价</Text>
+        <View style={[CommonStyles.card, { backgroundColor: '#FFFEF0' }]}>
+          <Text style={CommonStyles.sectionTitle}>今日评价</Text>
           
           {/* Default rating */}
-          <View style={styles.ratingItem}>
-            <Text style={styles.ratingLabel}>今日评价</Text>
-            <View style={styles.ratingControls}>
+          <View style={CommonStyles.ratingItem}>
+            <Text style={CommonStyles.ratingLabel}>今日评价</Text>
+            <View style={CommonStyles.ratingControls}>
               <StarRating 
                 rating={diary.ratings['今日评价'] || 0} 
                 onRatingChange={(value) => handleRatingChange('今日评价', value)}
@@ -199,7 +200,7 @@ export default function DiaryScreen() {
                 maxStars={5}
               />
               <TextInput
-                style={styles.ratingValue}
+                style={CommonStyles.ratingValue}
                 value={(diary.ratings['今日评价'] || 0).toFixed(1)}
                 onChangeText={(text) => handleRatingInputChange('今日评价', text)}
                 keyboardType="decimal-pad"
@@ -210,9 +211,9 @@ export default function DiaryScreen() {
           
           {/* Custom ratings from settings */}
           {settings.diary.customDiaryTags.map((tag, index) => (
-            <View key={index} style={styles.ratingItem}>
-              <Text style={styles.ratingLabel}>{tag}</Text>
-              <View style={styles.ratingControls}>
+            <View key={index} style={CommonStyles.ratingItem}>
+              <Text style={CommonStyles.ratingLabel}>{tag}</Text>
+              <View style={CommonStyles.ratingControls}>
                 <StarRating 
                   rating={diary.ratings[tag] || 0} 
                   onRatingChange={(value) => handleRatingChange(tag, value)}
@@ -220,7 +221,7 @@ export default function DiaryScreen() {
                   maxStars={5}
                 />
                 <TextInput
-                  style={styles.ratingValue}
+                  style={CommonStyles.ratingValue}
                   value={(diary.ratings[tag] || 0).toFixed(1)}
                   onChangeText={(text) => handleRatingInputChange(tag, text)}
                   keyboardType="decimal-pad"
@@ -231,7 +232,7 @@ export default function DiaryScreen() {
           ))}
         </View>
         
-        <Text style={styles.lastSavedText}>
+        <Text style={CommonStyles.lastSavedText}>
           上次保存: {formattedLastSaved}
         </Text>
       </ScrollView>
@@ -239,58 +240,16 @@ export default function DiaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5DC', // Beige color for diary feel
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  diaryContainer: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#FFFEF0',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    minHeight: 300,
-  },
-  diaryInput: {
-    fontFamily: 'System',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#333',
-    textAlignVertical: 'top',
-    height: 300,
-  },
-  ratingsContainer: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#FFFEF0',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  ratingsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
+// 在文件底部添加本地样式定义，但尽量使用 CommonStyles
+const styles = {
   ratingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: '#eee',
   },
   ratingLabel: {
     fontSize: 16,
@@ -300,23 +259,15 @@ const styles = StyleSheet.create({
   ratingControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 2,
   },
   ratingValue: {
     marginLeft: 8,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
     width: 40,
     textAlign: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#CCC',
-  },
-  lastSavedText: {
-    textAlign: 'center',
-    color: '#888',
-    fontSize: 12,
-    marginBottom: 20,
-    fontStyle: 'italic',
-  },
-  })
+    fontSize: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+  }
+}

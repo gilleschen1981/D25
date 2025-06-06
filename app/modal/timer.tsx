@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { Todo } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
+import { CommonStyles } from '../../src/constants/styles';
 import { showAlert } from '../../src/utils/alertUtils';
+
 
 export default function TimerScreen() {
   const router = useRouter();
@@ -140,82 +142,61 @@ export default function TimerScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={CommonStyles.container}>
       <Stack.Screen options={{ title: '计时器' }} />
 
-      <View style={styles.timerContainer}>
-        <Text style={styles.timerText}>{formatTime(secondsLeft)}</Text>
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <Text style={{
+          fontSize: 72,
+          fontWeight: 'bold',
+        }}>{formatTime(secondsLeft)}</Text>
         
         {/* 测试声音按钮 - 仅用于开发 */}
         {__DEV__ && (
           <TouchableOpacity 
-            style={[styles.button, { marginTop: 20, width: 200 }]}
+            style={[CommonStyles.button, { marginTop: 20, width: 200 }]}
             onPress={playCompletionSound}
           >
-            <Text style={styles.buttonText}>测试声音</Text>
+            <Text style={CommonStyles.buttonText}>测试声音</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+      }}>
         <TouchableOpacity 
-          style={styles.button}
+          style={CommonStyles.button}
           onPress={handleComplete}
         >
           <MaterialIcons name="stop" size={24} color="white" />
-          <Text style={styles.buttonText}>完成计时</Text>
+          <Text style={CommonStyles.buttonText}>完成计时</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.button}
+          style={CommonStyles.button}
           onPress={handleRestart}
         >
           <MaterialIcons name="replay" size={24} color="white" />
-          <Text style={styles.buttonText}>重新计时</Text>
+          <Text style={CommonStyles.buttonText}>重新计时</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.button}
+          style={CommonStyles.button}
           onPress={handleExit}
         >
           <MaterialIcons name="close" size={24} color="white" />
-          <Text style={styles.buttonText}>退出计时</Text>
+          <Text style={CommonStyles.buttonText}>退出计时</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  timerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timerText: {
-    fontSize: 72,
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  buttonText: {
-    color: 'white',
-    marginTop: 5,
-  },
-});
+// 删除本地styles定义，使用CommonStyles
