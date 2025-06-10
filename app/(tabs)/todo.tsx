@@ -190,6 +190,11 @@ export default function TodoScreen() {
 
   return (
     <View style={CommonStyles.container}>
+      {todos.length === 0 && (
+        <View style={CommonStyles.emptyState}>
+          <Text style={CommonStyles.emptyText}>{i18n.t('todo.noData')}</Text>
+        </View>
+      )}
       <Stack.Screen 
         options={{ 
           title: i18n.t('todo.title'),
@@ -202,6 +207,7 @@ export default function TodoScreen() {
                 <MaterialIcons name="refresh" size={28} color="black" />
               </TouchableOpacity>
               <TouchableOpacity 
+                testID="add-todo-button"
                 onPress={handleAddTodo}
                 style={{ paddingRight: 16 }}
               >

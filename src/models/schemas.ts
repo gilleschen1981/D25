@@ -3,7 +3,7 @@ import { TodoStatus, HabitPeriod } from './types';
 
 export const todoSchema = yup.object().shape({
   content: yup.string().required().max(200),
-  dueDate: yup.string().optional(),
+  dueDate: yup.date().optional(),
   tomatoTime: yup.number().optional().min(1).max(1440),
   status: yup.mixed<TodoStatus>().oneOf(['pending', 'inProgress', 'done']).required(),
   priority: yup.number().required().min(1).max(100),
@@ -25,8 +25,6 @@ export const habitSchema = yup.object().shape({
 export const habitGroupSchema = yup.object().shape({
   id: yup.string().required(),
   period: yup.mixed<HabitPeriod>().oneOf(['daily', 'weekly', 'monthly', 'custom']).required(),
-  startDate: yup.string().required(),
-  endDate: yup.string().required(),
   frequency: yup.number().when('period', (values: HabitPeriod[], schema) => 
     values[0] === 'custom' ? schema.required().min(1) : schema.optional()
   ),

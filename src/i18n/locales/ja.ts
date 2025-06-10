@@ -28,7 +28,8 @@ export const ja = {
     deleteTitle: 'タスクを削除',
     deleteConfirm: '"{{content}}"を削除してもよろしいですか？',
     dueDate: '期限',
-    start: '開始'
+    start: '開始',
+    noData: 'タスクデータがありません',
   },
   habit: {
     title: '習慣トラッキング',

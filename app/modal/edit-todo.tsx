@@ -204,6 +204,7 @@ export default function EditTodoScreen() {
         onChangeText={setContent}
         multiline
         autoFocus
+        testID="content-input"
       />
 
       {editingType !== 'habit' && (
@@ -213,6 +214,7 @@ export default function EditTodoScreen() {
             <Switch
               value={hasDueDate}
               onValueChange={setHasDueDate}
+              testID="due-date-toggle"
             />
           </View>
           {hasDueDate && (
@@ -245,6 +247,7 @@ export default function EditTodoScreen() {
                     mode="datetime"
                     display="default"
                     onChange={handleDateChange}
+                    testID="date-time-picker"
                   />
                 )
               )}
@@ -272,6 +275,7 @@ export default function EditTodoScreen() {
               }
             }}
             keyboardType="numeric"
+            testID="tomato-time-input"
           />
         )}
       </View>
@@ -295,15 +299,16 @@ export default function EditTodoScreen() {
               }
             }}
             keyboardType="numeric"
+            testID="target-count-input"
           />
         )}
       </View>
 
       <View style={CommonStyles.buttonRow}>
-        <TouchableOpacity style={CommonStyles.cancelButton} onPress={handleCancel}>
+        <TouchableOpacity style={CommonStyles.cancelButton} onPress={handleCancel} testID="cancel-button">
           <MaterialIcons name="close" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={CommonStyles.saveButton} onPress={handleSave}>
+        <TouchableOpacity style={CommonStyles.saveButton} onPress={handleSave} testID="save-button">
           <MaterialIcons name="check" size={24} color="white" />
         </TouchableOpacity>
       </View>

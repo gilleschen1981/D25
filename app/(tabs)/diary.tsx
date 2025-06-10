@@ -191,6 +191,7 @@ export default function DiaryScreen() {
             placeholder={i18n.t('diary.placeholder')}
             numberOfLines={10}
             textAlignVertical="top"
+            testID="diary-content-input"
           />
         </View>
         
@@ -213,6 +214,7 @@ export default function DiaryScreen() {
                 onChangeText={(text) => handleRatingInputChange('今日评价', text)}
                 keyboardType="decimal-pad"
                 maxLength={3}
+                testID="rating-input-今日评价"
               />
             </View>
           </View>
@@ -234,6 +236,7 @@ export default function DiaryScreen() {
                   onChangeText={(text) => handleRatingInputChange(tag, text)}
                   keyboardType="decimal-pad"
                   maxLength={3}
+                  testID={`rating-input-${tag}`}
                 />
               </View>
             </View>

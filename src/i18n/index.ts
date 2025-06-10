@@ -50,7 +50,9 @@ export const localeConfig: LocaleConfig = {
 // 切换语言
 export const changeLanguage = (language: Language) => {
   const locale = languageMap[language];
-  i18n.locale = locale;
+  if (locale != null) {
+    i18n.locale = locale;
+  }
 };
 
 // 获取当前语言

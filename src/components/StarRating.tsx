@@ -41,10 +41,11 @@ const StarRating: React.FC<StarRatingProps> = ({
       if (i <= fullStars) {
         // Full star
         stars.push(
-          <TouchableOpacity 
-            key={i} 
+          <TouchableOpacity
+            key={i}
             onPress={() => handleStarPress(i)}
             style={styles.starContainer}
+            testID={`star-button-${i}`}
           >
             <MaterialIcons name="star" size={size} color="#FFD700" />
           </TouchableOpacity>
@@ -52,10 +53,11 @@ const StarRating: React.FC<StarRatingProps> = ({
       } else if (i === fullStars + 1 && hasHalfStar) {
         // Half star
         stars.push(
-          <TouchableOpacity 
-            key={i} 
+          <TouchableOpacity
+            key={i}
             onPress={() => handleStarPress(i)}
             style={styles.starContainer}
+            testID={`star-button-${i}`}
           >
             <MaterialIcons name="star-half" size={size} color="#FFD700" />
           </TouchableOpacity>
@@ -63,10 +65,11 @@ const StarRating: React.FC<StarRatingProps> = ({
       } else {
         // Empty star
         stars.push(
-          <TouchableOpacity 
-            key={i} 
+          <TouchableOpacity
+            key={i}
             onPress={() => handleStarPress(i)}
             style={styles.starContainer}
+            testID={`star-button-${i}`}
           >
             <MaterialIcons name="star-outline" size={size} color="#FFD700" />
           </TouchableOpacity>
@@ -78,7 +81,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   };
   
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="star-rating-container">
       {renderStars()}
     </View>
   );

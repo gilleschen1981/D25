@@ -28,7 +28,8 @@ export const en = {
     deleteTitle: 'Delete Todo',
     deleteConfirm: 'Are you sure you want to delete "{{content}}"?',
     dueDate: 'Due',
-    start: 'Start'
+    start: 'Start',
+    noData: 'No Todo data',
   },
   habit: {
     title: 'Habit Tracking',

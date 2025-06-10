@@ -79,6 +79,7 @@ const SettingsPage = () => {
             <Switch
               value={localSettings.general.soundEnabled}
               onValueChange={(value) => handleChange('general', 'soundEnabled', value)}
+              testID="sound-enabled-switch"
             />
           </View>
 
@@ -87,6 +88,7 @@ const SettingsPage = () => {
             <Switch
               value={localSettings.general.reminderEnabled}
               onValueChange={(value) => handleChange('general', 'reminderEnabled', value)}
+              testID="reminder-enabled-switch"
             />
           </View>
 
@@ -97,6 +99,7 @@ const SettingsPage = () => {
               keyboardType="numeric"
               value={localSettings.general.remindBefore.toString()}
               onChangeText={(text) => handleChange('general', 'remindBefore', parseInt(text) || 0)}
+              testID="remind-before-input"
             />
           </View>
 
@@ -134,6 +137,7 @@ const SettingsPage = () => {
               keyboardType="numeric"
               value={localSettings.todo.defaultTomatoTime.toString()}
               onChangeText={(text) => handleChange('todo', 'defaultTomatoTime', parseInt(text) || 0)}
+              testID="default-tomato-time-input"
             />
           </View>
         </View>
@@ -148,6 +152,7 @@ const SettingsPage = () => {
               multiline
               value={localSettings.diary.diaryTemplate}
               onChangeText={(text) => handleChange('diary', 'diaryTemplate', text)}
+              testID="diary-template-selector"
             />
           </View>
 
@@ -160,13 +165,22 @@ const SettingsPage = () => {
                     style={CommonStyles.tagInput}
                     value={tag}
                     onChangeText={(text) => handleTagChange(index, text)}
+                    testID={`custom-tag-input-${index}`}
                   />
-                  <Text style={CommonStyles.removeTag} onPress={() => removeTag(index)}>
+                  <Text
+                    style={CommonStyles.removeTag}
+                    onPress={() => removeTag(index)}
+                    testID={`remove-tag-button-${index}`}
+                  >
                     ×
                   </Text>
                 </View>
               ))}
-              <Text style={CommonStyles.addTag} onPress={addTag}>
+              <Text
+                style={CommonStyles.addTag}
+                onPress={addTag}
+                testID="add-tag-button"
+              >
                 {i18n.t('settings.addTag')}
               </Text>
             </View>
@@ -176,6 +190,7 @@ const SettingsPage = () => {
         <TouchableOpacity
           style={[CommonStyles.button, { marginTop: 20, marginBottom: 40 }]}
           onPress={handleReset}
+          testID="reset-data-button"
         >
           <Text style={CommonStyles.buttonText}>{i18n.t('settings.resetData')}</Text>
         </TouchableOpacity>

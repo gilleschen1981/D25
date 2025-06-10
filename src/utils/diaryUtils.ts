@@ -15,7 +15,7 @@ export function generateDiaryTemplate(
   // 创建模板内容
   const content = diaryTemplate === 'simple' 
     ? `${date}\t天气：${weather || ''}\n\n完成事项：\n\n心得体会：\n` 
-    : diaryTemplate.replace('{日期}', date).replace('{天气}', weather || '');
+    : diaryTemplate.replaceAll('{日期}', date).replace('{天气}', weather || '');
   
   // 初始化评分
   const ratings: Record<string, number> = {};

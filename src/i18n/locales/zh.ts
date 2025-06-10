@@ -28,7 +28,8 @@ export const zh = {
     deleteTitle: '删除待办事项',
     deleteConfirm: '确定要删除"{{content}}"吗？',
     dueDate: '截至',
-    start: '开始'
+    start: '开始',
+    noData: '暂无待办数据',
   },
   habit: {
     title: '习惯追踪',

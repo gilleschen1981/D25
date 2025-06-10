@@ -147,7 +147,10 @@ function HabitGroup({ period, groupname, habits, onAddHabit, onLongPress, active
         <Text style={CommonStyles.groupTitle}>{groupname}({i18n.t(`habit.periods.${period}`)})</Text>
         <View style={CommonStyles.groupHeaderRight}>
           <Text style={CommonStyles.groupCount}>{habits.length}{i18n.t('habit.items')}</Text>
-          <TouchableOpacity onPress={onAddHabit}>
+          <TouchableOpacity 
+            onPress={onAddHabit}
+            testID={`group-add-button-${period}`}
+          >
             <MaterialIcons name="add" size={24} color="black" />
           </TouchableOpacity>
           <MaterialIcons 
