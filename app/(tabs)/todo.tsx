@@ -200,12 +200,12 @@ export default function TodoScreen() {
           title: i18n.t('todo.title'),
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity 
+              {/* <TouchableOpacity 
                 onPress={() => useTodoStore.getState().daychange()}
                 style={{ paddingRight: 16 }}
               >
                 <MaterialIcons name="refresh" size={28} color="black" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity 
                 testID="add-todo-button"
                 onPress={handleAddTodo}

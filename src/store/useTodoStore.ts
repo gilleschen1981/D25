@@ -110,7 +110,10 @@ export const useTodoStore = create<AppState>()(
             habits: []
           };
           habitGroupSchema.validateSync(newGroup);
-          set((state) => ({ habitGroups: [...state.habitGroups, newGroup] }));
+          set((state) => (
+            { habitGroups: [...state.habitGroups, newGroup],
+              lastSaved: new Date().toISOString()
+            }));
           return id;
         } catch (error) {
           console.error('Validation error:', error);
@@ -123,7 +126,8 @@ export const useTodoStore = create<AppState>()(
           set((state) => ({
             habitGroups: state.habitGroups.map((group) =>
               group.id === id ? { ...group, ...updates } : group
-            ),
+            ),  
+            lastSaved: new Date().toISOString()
           }));
         } catch (error) {
           console.error('Update error:', error);
@@ -133,6 +137,7 @@ export const useTodoStore = create<AppState>()(
       deleteHabitGroup: (id: string) => {
         set((state) => ({
           habitGroups: state.habitGroups.filter((group) => group.id !== id),
+          lastSaved: new Date().toISOString()
         }));
       },
 
@@ -163,6 +168,7 @@ export const useTodoStore = create<AppState>()(
               }
               return group;
             }),
+            lastSaved: new Date().toISOString()
           }));
         } catch (error) {
           console.error('Validation error:', error);
@@ -181,6 +187,7 @@ export const useTodoStore = create<AppState>()(
               }
               return group;
             }),
+            lastSaved: new Date().toISOString()
           }));
         } catch (error) {
           console.error('Update error:', error);
@@ -197,6 +204,7 @@ export const useTodoStore = create<AppState>()(
             }
             return group;
           }),
+          lastSaved: new Date().toISOString()
         }));
       },
 
@@ -222,7 +230,8 @@ export const useTodoStore = create<AppState>()(
 
       updateSettings: (updates: Partial<Settings>) => {
         set((state) => ({
-          settings: { ...state.settings, ...updates }
+          settings: { ...state.settings, ...updates },
+          lastSaved: new Date().toISOString()
         }));
       },
 

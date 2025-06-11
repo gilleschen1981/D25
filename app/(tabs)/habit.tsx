@@ -5,7 +5,6 @@ import { Stack, useRouter } from 'expo-router';
 import { useTodoStore } from '../../src/store/useTodoStore';
 import { Habit, HabitPeriod } from '../../src/models/types';
 import { MaterialIcons } from '@expo/vector-icons';
-import { generateRandomLightColor } from '../../src/constants/colors';
 import { CommonStyles } from '../../src/constants/styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import i18n from '../../src/i18n';
